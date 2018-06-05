@@ -1,0 +1,50 @@
+{
+  "name": "@theia/che-theia-java",
+  "version": "0.0.1",
+  "description": "Che-Theia - Java Extension",
+  "dependencies": {
+    "@theia/core": "^0.3.10",
+    "@theia/editor": "^0.3.10",
+    "@theia/languages": "^0.3.10",
+    "@theia/java": "^0.3.10"
+  },
+  "devDependencies": {
+    "@theia/ext-scripts": "^0.3.10"
+  },
+  "scripts": {
+    "prepare": "yarn run clean && yarn run build",
+    "clean": "theiaext clean",
+    "build": "theiaext build",
+    "watch": "theiaext watch",
+    "test": "theiaext test",
+    "docs": "theiaext docs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "theiaExtensions": [
+    {
+      "frontend": "lib/browser/java-frontend-module"
+    }
+  ],
+  "keywords": [
+    "theia-extension"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theia-ide/theia.git"
+  },
+  "bugs": {
+    "url": "https://github.com/theia-ide/theia/issues"
+  },
+  "homepage": "https://github.com/theia-ide/theia",
+  "files": [
+    "lib",
+    "scripts",
+    "src"
+  ],
+  "nyc": {
+    "extends": "../../configs/nyc.json"
+  }
+}
