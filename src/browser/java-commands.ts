@@ -6,11 +6,16 @@
  */
 
 import { inject, injectable } from "inversify";
-import { CommandContribution, CommandRegistry, MenuContribution, MenuModelRegistry, MAIN_MENU_BAR } from '@theia/core/lib/common';
+import { CommandContribution, CommandRegistry, MenuContribution, MenuModelRegistry, MAIN_MENU_BAR, MessageService } from '@theia/core/lib/common';
 import { EditorManager } from "@theia/editor/lib/browser";
 import { KeybindingContribution, KeybindingRegistry } from "@theia/core/lib/browser";
 import { Workspace } from "@theia/languages/lib/common";
 import { JavaClientContribution } from "@theia/java/lib/browser/java-client-contribution";
+
+export const HelloWorldCommand = {
+    id: 'HelloWorld.command',
+    label: "Shows a message"
+};
 
 @injectable()
 export class JavaExtensionCommandContribution implements CommandContribution, MenuContribution, KeybindingContribution {
@@ -24,14 +29,16 @@ export class JavaExtensionCommandContribution implements CommandContribution, Me
     @inject(JavaClientContribution)
     protected readonly javaClientContribution: JavaClientContribution;
 
+    @inject(MessageService)
+    private readonly messageService: MessageService;
+
     registerCommands(commands: CommandRegistry): void {
+        commands.registerCommand(HelloWorldCommand, {
+            execute: () => this.messageService.info('Hello World!')
+        });
     }
 
     registerMenus(menus: MenuModelRegistry): void {
-        menus.registerMenuAction([...MAIN_MENU_BAR, '1_tester'], {
-            commandId: "test",
-            label: 'Testing to see if this works'
-        });
     }
 
     registerKeybindings(keybindings: KeybindingRegistry): void {

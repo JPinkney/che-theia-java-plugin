@@ -41,7 +41,6 @@
   "homepage": "https://github.com/theia-ide/theia",
   "files": [
     "lib",
-    "scripts",
     "src"
   ],
   "nyc": {
