@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
 
+<<<<<<< HEAD
     Copyright (c) 2012-2018 Red Hat, Inc.
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v2.0
@@ -12,6 +13,20 @@
 -->
 <svg version="1.1" id="javaSourceFile" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
      viewBox="7 7 18 18" enable-background="new 0 0 32 32" xml:space="preserve">
+=======
+    Copyright (c) 2018 Red Hat, Inc.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Red Hat, Inc. - initial API and implementation
+
+-->
+<svg version="1.1" id="javaSourceFile" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+     width="10px" height="10px" viewBox="7 7 18 18" enable-background="new 0 0 32 32" xml:space="preserve">
+>>>>>>> 1195f9c... Started usages
         <g>
             <path fill-rule="evenodd" clip-rule="evenodd" fill="#72AD42" d="M16,24c4.406,0,8-3.594,8-8c0-4.406-3.594-8-8-8
                 c-4.406,0-8,3.594-8,8C8,20.406,11.594,24,16,24z"/>
@@ -21,4 +36,8 @@
                 l1.062,1.061c0.097,0.098,0.097,0.256,0,0.354l-0.531,0.53C18.104,19.553,17.104,20,16,20c-2.209,0-4-1.791-4-4S13.791,12,16,12z"
                 />
         </g>
+<<<<<<< HEAD
 </svg>
+=======
+</svg>
+>>>>>>> 1195f9c... Started usages

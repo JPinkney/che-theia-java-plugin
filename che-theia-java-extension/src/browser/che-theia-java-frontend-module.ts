@@ -17,7 +17,7 @@ import {
 } from "@theia/core/lib/common";
 
 import { ContainerModule, Container, interfaces } from "inversify";
-import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget, TreeModelImpl, TreeModel } from '@theia/core/lib/browser';
+import { KeybindingContext, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget, TreeModelImpl, TreeModel } from '@theia/core/lib/browser';
 
 import "../../src/browser/styles/icons.css";
 import "../../src/browser/styles/classpath.css";
@@ -37,6 +37,13 @@ import { SourceView, SourceViewID } from './classpath/pages/source/source-view';
 import { IClasspathNode } from './classpath/nodes/classpath-node';
 import { LibraryNode } from './classpath/nodes/library-node';
 import { SourceNode } from './classpath/nodes/source-node';
+import { KeybindingContribution, WidgetFactory, bindViewContribution } from '@theia/core/lib/browser';
+
+import "../../src/browser/styles/icons.css";
+import { UsagesContribution } from './usages/usages-frontend-contribution';
+import { UsagesWidget, USAGES_ID } from './usages/usages-tree-widget';
+import { createUsagesWidget } from './usages/usages-tree-container';
+
 
 export default new ContainerModule((bind) => {
 
@@ -110,6 +117,15 @@ export default new ContainerModule((bind) => {
     bind(ClasspathDecorator).toSelf().inSingletonScope();
     bind(NavigatorTreeDecorator).toService(ClasspathDecorator);
 
+    bindViewContribution(bind, UsagesContribution);
+
+    bind(UsagesWidget).toDynamicValue(ctx => {
+        return createUsagesWidget(ctx.container)
+    });
+    bind(WidgetFactory).toDynamicValue(context => ({
+        id: USAGES_ID,
+        createWidget: () => context.container.get<UsagesWidget>(UsagesWidget)
+    }));
 });
 
 export const PROPS_PROPS = <TreeProps>{

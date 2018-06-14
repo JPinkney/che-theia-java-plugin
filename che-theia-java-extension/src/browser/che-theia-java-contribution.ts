@@ -23,6 +23,15 @@ export const CONFIGURE_CLASSPATH_COMMAND: Command = {
     label: 'Configure Classpath'
 };
 
+/**
+ * Find implementers
+ */
+export const FIND_IMPLEMENTERS: Command = {
+    label: 'Java: Find Implementers',
+    id: 'java.nav.findImplementers'
+};
+
+
 @injectable()
 export class JavaExtensionContribution implements CommandContribution, MenuContribution, KeybindingContribution {
 

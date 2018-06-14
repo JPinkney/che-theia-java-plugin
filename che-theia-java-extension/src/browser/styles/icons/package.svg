@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!--
 
+<<<<<<< HEAD
     Copyright (c) 2012-2018 Red Hat, Inc.
     This program and the accompanying materials
     are made available under the terms of the Eclipse Public License v2.0
     which is available at http://www.eclipse.org/legal/epl-2.0.html
     SPDX-License-Identifier: EPL-2.0
+=======
+    Copyright (c) 2018 Red Hat, Inc.
+    All rights reserved. This program and the accompanying materials
+    are made available under the terms of the Eclipse Public License v1.0
+    which accompanies this distribution, and is available at
+    http://www.eclipse.org/legal/epl-v10.html
+
+>>>>>>> 1195f9c... Started usages
     Contributors:
       Red Hat, Inc. - initial API and implementation
 
@@ -19,4 +28,8 @@
             <rect x="15.001" y="8" fill-rule="evenodd" clip-rule="evenodd" fill="#3193D4" width="2" height="16"/>
             <rect x="8.001" y="15" fill-rule="evenodd" clip-rule="evenodd" fill="#3193D4" width="16" height="2"/>
         </g>
+<<<<<<< HEAD
 </svg>
+=======
+</svg>
+>>>>>>> 1195f9c... Started usages
