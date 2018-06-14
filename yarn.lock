@@ -222,6 +222,19 @@
     touch "^3.1.0"
     trash "^4.0.1"
 
+"@theia/java@file:../java":
+  version "0.3.10"
+  dependencies:
+    "@theia/core" "^0.3.10"
+    "@theia/editor" "^0.3.10"
+    "@theia/languages" "^0.3.10"
+    "@theia/monaco" "^0.3.10"
+    "@types/glob" "^5.0.30"
+    "@types/tar" "4.0.0"
+    glob "^7.1.2"
+    mkdirp "^0.5.0"
+    tar "^4.0.0"
+
 "@theia/java@latest":
   version "0.3.10"
   resolved "https://registry.yarnpkg.com/@theia/java/-/java-0.3.10.tgz#59396c3ed8ec3bbf3dec141553a19d17900ab5bf"
@@ -490,6 +503,12 @@
   dependencies:
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
+
+"@types/tar@4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@types/tar/-/tar-4.0.0.tgz#e3239d969eeb693a012200613860d0eb871c94f0"
+  dependencies:
+    "@types/node" "*"
 
 "@types/throttle-debounce@^1.0.0":
   version "1.0.0"
@@ -7433,7 +7452,7 @@ tar@^2.0.0:
     fstream "^1.0.2"
     inherits "2"
 
-tar@^4:
+tar@^4, tar@^4.0.0:
   version "4.4.4"
   resolved "https://registry.yarnpkg.com/tar/-/tar-4.4.4.tgz#ec8409fae9f665a4355cc3b4087d0820232bb8cd"
   dependencies:

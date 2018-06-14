@@ -14,7 +14,7 @@ import {
 import { ContainerModule } from "inversify";
 import { KeybindingContribution } from '@theia/core/lib/browser';
 
-export default new ContainerModule(bind => {
+export default new ContainerModule((bind, unbind, isBound) => {
     bind(CommandContribution).to(JavaExtensionContribution);
     bind(MenuContribution).to(JavaExtensionContribution);
     bind(KeybindingContribution).to(JavaExtensionContribution);

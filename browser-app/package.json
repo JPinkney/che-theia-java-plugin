@@ -16,7 +16,7 @@
     "@theia/monaco": "latest",
     "@theia/typescript": "latest",
     "@theia/messages": "latest",
-    "@theia/java": "latest",
+    "@theia/java": "file:../../java",
     "che-theia-java-extension": "0.0.1"
   },
   "devDependencies": {
