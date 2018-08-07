@@ -21,6 +21,10 @@ export const FILE_NAVIGATOR_ID = 'files';
 export const LABEL = 'Files';
 export const CLASS = 'theia-Files';
 
+export interface ClasspathNode extends SelectableTreeNode {
+    onSelect: Function;
+}
+
 /**
  * This is the left side of the panel that holds the libraries and the source node
  */
@@ -38,12 +42,8 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.title.label = LABEL;
         this.addClass(CLASS);
         this.model.onSelectionChanged(e => {
-            const firstNode = e[0] as SelectableTreeNode;
-            if (firstNode.name === "Libraries") {
-                this.classpathTreeWidget.setClasspathTree([]);
-            } else if (firstNode.name === "Sources") {
-                this.classpathTreeWidget.setClasspathTree([]);
-            }
+            const firstNode = e[0] as ClasspathNode;
+            firstNode.onSelect();
         });
     }
 
@@ -58,20 +58,29 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.model.root = rootNode;
     }
 
-    private createBuildPathTreeChildren(parent: TreeNode): TreeNode[] {
+    private createBuildPathTreeChildren(parent: TreeNode): ClasspathNode[] {
         const librariesNode = {
             id: "build-path-libraries-node",
             name: "Libraries",
             parent,
             selected: true
-        } as SelectableTreeNode;
+        } as ClasspathNode;
 
         const sourceNode = {
             id: "build-path-sources-node",
             name: "Sources",
             parent,
             selected: false
-        } as SelectableTreeNode;
+        } as ClasspathNode;
         return [librariesNode, sourceNode];
     }
+
+    private libraryOnSelect() {
+
+    }
+
+    private sourcesOnSelect() {
+
+    }
+
 }
