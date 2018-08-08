@@ -16,40 +16,67 @@
 
 import { injectable, inject } from "inversify";
 import { DefaultFrontendApplicationContribution, Widget } from "@theia/core/lib/browser";
-import { FileSystemWatcher } from "@theia/filesystem/lib/browser/filesystem-watcher";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { ExternalLibrariesWidget } from "./external-libraries-widget";
+import { LibraryNode } from "./external-libraries-tree";
+
 
 @injectable()
 export class ExternalLibrariesInterceptor extends DefaultFrontendApplicationContribution {
 
-    constructor(@inject(FileSystemWatcher) protected readonly fileSystemWatcher: FileSystemWatcher,
-            @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+    constructor(@inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
             @inject(ExternalLibrariesWidget) protected readonly externalLibrariesWidget: ExternalLibrariesWidget) {
         super();
-        this.intercept();
+        this.addExternalLibrariesIfNeeded();
     }
 
-    protected async intercept() {
-        this.fileSystemWatcher.onFilesChanged(async e => {
-            const contains = await this.workspaceService.containsSome(['pom.xml', '.gradle', '.project']);
-            const root = await this.workspaceService.root;
-            if (contains && root) {
-                const node = this.externalLibrariesWidget.model.tree.getNode(root.uri);
-                if (node) {
-                    const ele = document.getElementById(node.id);
-                    if (ele) {
-                        Widget.attach(this.externalLibrariesWidget, ele);
-                    }
+
+    private async addExternalLibrariesIfNeeded() {
+        const isJavaProject = await this.workspaceService.containsSome(['pom.xml', '.gradle']);
+        const workspaceRoot = await this.workspaceService.root;
+        
+        if (!workspaceRoot) {
+            return;   
+        }
+
+        if (!isJavaProject && this.isExternalLibrariesNodePresent(workspaceRoot.uri)) {
+            this.removeExternalLibrariesWidget();
+        } else if (isJavaProject && !this.isExternalLibrariesNodePresent(workspaceRoot.uri)) {
+            this.addExternalLibrariesWidget(workspaceRoot.uri);
+        }
+    }
+
+    private isExternalLibrariesNodePresent(workspaceRootUri: string): boolean {
+        const node = this.externalLibrariesWidget.model.tree.getNode("LibraryNode" + workspaceRootUri);
+        if (node) {
+            return document.getElementById(node.id) !== null;
+        }
+        return false;
+    }
+
+    /**
+     * Remove external libraries node if present else do nothing
+     */
+    private removeExternalLibrariesWidget(): void {
+        if (this.isExternalLibrariesNodePresent) {
+            Widget.detach(this.externalLibrariesWidget);
+        }
+    }
+
+    /**
+     * Add external libraries node if not present else do nothing
+     */
+    private addExternalLibrariesWidget(workspaceRootUri: string): void {
+        if (!this.isExternalLibrariesNodePresent(workspaceRootUri)) {
+            // const folderRoot = this.fileNavigatorModel.root;
+            // if (folderRoot) {
+                this.externalLibrariesWidget.model.tree.root = LibraryNode.create(workspaceRootUri, undefined);
+                const folderRootLocation = document.getElementById(workspaceRootUri);
+                if (folderRootLocation) {
+                    Widget.attach(this.externalLibrariesWidget, folderRootLocation);
                 }
-            } else {
-                try {
-                    Widget.detach(this.externalLibrariesWidget);
-                } catch(e) {
-                    console.log(e);
-                }   
             }
-        });
+        //}
     }
 
 }

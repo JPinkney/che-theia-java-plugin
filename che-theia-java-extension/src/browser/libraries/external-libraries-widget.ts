@@ -15,9 +15,7 @@ import { ContextMenuRenderer, TreeProps, TreeNode, NodeProps, TreeWidget } from 
 import { h } from '@phosphor/virtualdom';
 import { ExternalLibraryModel } from './external-libraries-model';
 
-export const EXTERNAL_LIBRARIES_ID = 'files';
-export const LABEL = 'Files';
-export const CLASS = 'theia-Files';
+export const EXTERNAL_LIBRARIES_ID = 'External Libraries';
 
 @injectable()
 export class ExternalLibrariesWidget extends TreeWidget {
@@ -29,8 +27,6 @@ export class ExternalLibrariesWidget extends TreeWidget {
     ) {
         super(props, model, contextMenuRenderer);
         this.id = EXTERNAL_LIBRARIES_ID;
-        this.title.label = LABEL;
-        this.addClass(CLASS);
     }
 
     protected renderIcon(node: TreeNode, props: NodeProps): h.Child {

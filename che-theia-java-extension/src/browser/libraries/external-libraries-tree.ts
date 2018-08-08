@@ -83,7 +83,7 @@ export namespace LibraryNode {
         return !!node && 'projectURI' in node && !('jar' in node) && !('jarEntry' in node);
     }
 
-    export function create(projectURI: string, parent?: Readonly<CompositeTreeNode>): LibraryNode {
+    export function create(projectURI: string, parent?: TreeNode): LibraryNode {
         const id = "LibraryNode"+projectURI;
         return <LibraryNode>{
             id,

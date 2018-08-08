@@ -11,10 +11,8 @@
  */
 
 import { Container, interfaces } from 'inversify';
-import { TreeModel, TreeProps, defaultTreeProps, Tree } from "@theia/core/lib/browser";
-import { createFileTreeContainer, FileTreeModel } from '@theia/filesystem/lib/browser';
+import { TreeModel, TreeProps, defaultTreeProps, Tree, createTreeContainer, TreeImpl, TreeModelImpl } from "@theia/core/lib/browser";
 import { ExternalLibrariesWidget } from './external-libraries-widget';
-import { FileNavigatorTree } from '@theia/navigator/lib/browser/navigator-tree';
 import { ExternalLibrariesTree } from './external-libraries-tree';
 import { ExternalLibraryModel } from './external-libraries-model';
 
@@ -25,13 +23,13 @@ export const FILE_NAVIGATOR_PROPS = <TreeProps>{
 };
 
 export function createExternalLibrariesContainer(parent: interfaces.Container): Container {
-    const child = createFileTreeContainer(parent);
+    const child = createTreeContainer(parent);
 
-    child.bind(FileNavigatorTree).toSelf();
+    child.unbind(TreeImpl);
     child.bind(ExternalLibrariesTree).toSelf();
     child.rebind(Tree).toDynamicValue(ctx => ctx.container.get(ExternalLibrariesTree));
 
-    child.unbind(FileTreeModel);
+    child.unbind(TreeModelImpl);
     child.bind(ExternalLibraryModel).toSelf();
     child.rebind(TreeModel).toDynamicValue(ctx => ctx.container.get(ExternalLibraryModel));
 
