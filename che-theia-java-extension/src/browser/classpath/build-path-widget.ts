@@ -17,6 +17,7 @@
 import { injectable, inject } from 'inversify';
 import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, TreeNode, CompositeTreeNode, SelectableTreeNode } from '@theia/core/lib/browser';
 import { ClasspathTreeWidget } from './classpath-tree-widget';
+import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 export const FILE_NAVIGATOR_ID = 'files';
 export const LABEL = 'Files';
 export const CLASS = 'theia-Files';
@@ -35,7 +36,8 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(TreeProps) readonly props: TreeProps,
         @inject(TreeModel) readonly model: TreeModel,
         @inject(ContextMenuRenderer) readonly contextMenuRenderer: ContextMenuRenderer,
-        @inject(ClasspathTreeWidget) protected readonly classpathTreeWidget: ClasspathTreeWidget
+        @inject(ClasspathTreeWidget) protected readonly classpathTreeWidget: ClasspathTreeWidget,
+        @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider
     ) {
         super(props, model, contextMenuRenderer);
         this.id = FILE_NAVIGATOR_ID;
@@ -58,29 +60,41 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.model.root = rootNode;
     }
 
-    private createBuildPathTreeChildren(parent: TreeNode): ClasspathNode[] {
+    private createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): ClasspathNode[] {
         const librariesNode = {
             id: "build-path-libraries-node",
             name: "Libraries",
             parent,
-            selected: true
+            selected: true,
+            onSelect: this.libraryOnSelect
         } as ClasspathNode;
 
         const sourceNode = {
             id: "build-path-sources-node",
             name: "Sources",
             parent,
-            selected: false
+            selected: false,
+            onSelect: this.sourcesOnSelect
         } as ClasspathNode;
         return [librariesNode, sourceNode];
     }
 
-    private libraryOnSelect() {
-
+    private async libraryOnSelect() {
+        const javaClient = await this.languageClientProvider.getLanguageClient("java");
+            if (javaClient) {
+                const result = await javaClient.sendRequest(ExecuteCommandRequest.type, {
+                    command: GET_CLASS_PATH_TREE_COMMAND,
+                    arguments: [
+                        projectPath
+                    ]
+                });
+                this.classpath.set(projectPath, result);
+                return result;
+            } 
     }
 
-    private sourcesOnSelect() {
-
+    private async sourcesOnSelect() {
+        const client = await this.languageClientProvider.getLanguageClient("java");
     }
 
 }

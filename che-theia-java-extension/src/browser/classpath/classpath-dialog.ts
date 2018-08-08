@@ -15,7 +15,9 @@
  ********************************************************************************/
 
 import { injectable, inject } from "inversify";
-import { AbstractDialog } from "@theia/core/lib/browser";
+import { AbstractDialog, Message, Widget } from "@theia/core/lib/browser";
+import { ClasspathTreeWidget } from "./classpath-tree-widget";
+import { Disposable } from "@theia/core";
 
 @injectable()
 export class DialogProps {
@@ -24,7 +26,9 @@ export class DialogProps {
 
 @injectable()
 export abstract class ClassPathDialog extends AbstractDialog<void> {
-    constructor(@inject(DialogProps) protected readonly props: DialogProps) {
+    
+    constructor(@inject(DialogProps) protected readonly props: DialogProps,
+                @inject(ClasspathTreeWidget) protected readonly widget: ClasspathTreeWidget) {
         super(props);
     }
 
@@ -32,6 +36,14 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
      * On after attach we can append the widgets
      */
 
+    protected onAfterAttach(msg: Message): void {
+        super.onAfterAttach(msg);
+        Widget.attach(this.widget, this.contentNode);
+        this.toDisposeOnDetach.push(Disposable.create(() =>
+            Widget.detach(this.widget)
+        ));
+    }
+    
     /**
      * We are going to need
      * 1. Left side of the panel
