@@ -20,7 +20,6 @@ import { ClasspathEntry, ClasspathResolver } from './classpath-resolver';
 import { ExecuteCommandRequest } from '@theia/languages/lib/browser';
 import { GET_CLASS_PATH_TREE_COMMAND } from '../che-ls-jdt-commands';
 
-
 @injectable()
 export class ClasspathContainer  {
 

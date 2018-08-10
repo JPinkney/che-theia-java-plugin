@@ -1,0 +1,10 @@
+.classpath-panel {
+    width: 45%;
+    float: left;
+    padding-left: calc(var(--theia-ui-padding)*2)
+}
+
+.classpath-modal {
+    min-height: 450px;
+    min-width: 650px;
+}

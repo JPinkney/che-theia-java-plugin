@@ -14,10 +14,11 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject } from "inversify";
+import { injectable, inject, postConstruct } from "inversify";
 import { AbstractDialog, Message, Widget } from "@theia/core/lib/browser";
-import { ClasspathTreeWidget } from "./classpath-tree-widget";
 import { Disposable } from "@theia/core";
+import { BuildPathTreeWidget } from "./build-path-widget";
+import { ClasspathTreeWidget } from "./classpath-tree-widget";
 
 @injectable()
 export class DialogProps {
@@ -27,32 +28,57 @@ export class DialogProps {
 @injectable()
 export abstract class ClassPathDialog extends AbstractDialog<void> {
     
+    private leftPanel: HTMLElement;
+    private rightPanel: HTMLElement;
+
     constructor(@inject(DialogProps) protected readonly props: DialogProps,
-                @inject(ClasspathTreeWidget) protected readonly widget: ClasspathTreeWidget) {
+                @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget,
+                @inject(ClasspathTreeWidget) protected readonly classPathTreeWidget: ClasspathTreeWidget) {
         super(props);
+
+        if (this.contentNode.parentElement) {
+            this.contentNode.parentElement.classList.add('classpath-modal');
+        }
+
+        this.leftPanel = document.createElement('div');
+        this.leftPanel.classList.add('classpath-panel');
+
+        this.rightPanel = document.createElement('div');
+        this.rightPanel.classList.add('classpath-panel');
+
+        this.contentNode.classList.remove('dialogContent');
+        this.contentNode.classList.add('classpath-content');
+
+        this.contentNode.appendChild(this.leftPanel);
+        this.contentNode.appendChild(this.rightPanel);
     }
 
-    /**
-     * On after attach we can append the widgets
-     */
+    @postConstruct()
+    protected init() {
+        this.toDispose.push(this.buildPathTreeWidget);
+        this.toDispose.push(this.classPathTreeWidget);
+    }
 
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
-        Widget.attach(this.widget, this.contentNode);
-        this.toDisposeOnDetach.push(Disposable.create(() =>
-            Widget.detach(this.widget)
-        ));
+        Widget.attach(this.buildPathTreeWidget, this.leftPanel);
+        Widget.attach(this.classPathTreeWidget, this.rightPanel);
+        this.toDisposeOnDetach.push(Disposable.create(() => {
+            Widget.detach(this.buildPathTreeWidget);
+            Widget.detach(this.classPathTreeWidget);
+        }));
     }
-    
-    /**
-     * We are going to need
-     * 1. Left side of the panel
-     *  - Java Build Path
-     *      - Libraries
-     *      - Source
-     * 2. Right side of the panel
-     *  - Title
-     *  - Tree view
-     *  - Button
-     */
+
+    protected onUpdateRequest(msg: Message): void {
+        super.onUpdateRequest(msg);
+        this.buildPathTreeWidget.update();
+        this.classPathTreeWidget.update();
+    }
+
+    protected onActivateRequest(msg: Message): void {
+        super.onActivateRequest(msg);
+        this.buildPathTreeWidget.createBuildPathTree();
+        this.classPathTreeWidget.createClassPathTree();
+    }
+
 }

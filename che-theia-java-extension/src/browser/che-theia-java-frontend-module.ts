@@ -16,12 +16,16 @@ import {
     MenuContribution
 } from "@theia/core/lib/common";
 
-import { ContainerModule } from "inversify";
-import { KeybindingContribution, KeybindingContext } from '@theia/core/lib/browser';
+import { ContainerModule, Container, interfaces } from "inversify";
+import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget } from '@theia/core/lib/browser';
 
 import "../../src/browser/styles/icons.css";
+import "../../src/browser/styles/classpath.css";
 import { FileStructure } from './navigation/file-structure';
 import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
+import { ClasspathTreeWidget } from './classpath/classpath-tree-widget';
+import { BuildPathTreeWidget } from './classpath/build-path-widget';
+import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
 
 export default new ContainerModule((bind) => {
 
@@ -35,4 +39,68 @@ export default new ContainerModule((bind) => {
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
 
     bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
+
+    bind(ClassPathDialog).toSelf().inSingletonScope();
+    bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
+
+    bind(BuildPathTreeWidget).toDynamicValue(ctx =>
+        createBuildPathTreeWidget(ctx.container)
+    );
+    bind(WidgetFactory).toDynamicValue(context => ({
+        id: "Build path tree widget",
+        createWidget: () => context.container.get<ClasspathTreeWidget>(ClasspathTreeWidget)
+    }));
+
+    bind(ClasspathTreeWidget).toDynamicValue(ctx =>
+        createClassPathTreeWidget(ctx.container)
+    );
+    bind(WidgetFactory).toDynamicValue(context => ({
+        id: "CLASSPATH_TREE_WIDGET",
+        createWidget: () => context.container.get<ClasspathTreeWidget>(ClasspathTreeWidget)
+    }));
+
 });
+
+export const PROPS_PROPS = <TreeProps>{
+    ...defaultTreeProps,
+    contextMenuPath: ["NAVIGATOR_CONTEXT_MENU"],
+    multiSelect: false
+};
+
+export const PROPS_PROPS2 = <TreeProps>{
+    ...defaultTreeProps,
+    contextMenuPath: ["NAVIGATOR_CONTEXT_MENU"],
+    multiSelect: false
+};
+
+export function createBuildPathTreeWidgetContainer(parent: interfaces.Container): Container {
+    const child = createTreeContainer(parent);
+
+    child.rebind(TreeProps).toConstantValue(PROPS_PROPS);
+
+    child.unbind(TreeWidget);
+    child.bind(BuildPathTreeWidget).toSelf();
+
+    return child;
+}
+
+export function createBuildPathTreeWidget(parent: interfaces.Container): BuildPathTreeWidget {
+    return createBuildPathTreeWidgetContainer(parent).get(BuildPathTreeWidget);
+}
+
+
+export function createClassPathTreeWidgetContainer(parent: interfaces.Container): Container {
+    const child = createTreeContainer(parent);
+
+    child.rebind(TreeProps).toConstantValue(PROPS_PROPS2);
+
+    child.unbind(TreeWidget);
+    child.bind(ClasspathTreeWidget).toSelf();
+
+    return child;
+}
+
+export function createClassPathTreeWidget(parent: interfaces.Container): ClasspathTreeWidget {
+    return createClassPathTreeWidgetContainer(parent).get(ClasspathTreeWidget);
+}
+
