@@ -42,9 +42,11 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
 
         this.leftPanel = document.createElement('div');
         this.leftPanel.classList.add('classpath-panel');
+        this.leftPanel.classList.add('classpath-panel-left');
 
         this.rightPanel = document.createElement('div');
         this.rightPanel.classList.add('classpath-panel');
+        this.rightPanel.classList.add('classpath-panel-right');
 
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');

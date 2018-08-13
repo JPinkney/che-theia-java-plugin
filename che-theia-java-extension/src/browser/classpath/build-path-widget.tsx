@@ -35,6 +35,7 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider
     ) {
         super(props, model, contextMenuRenderer);
+        this.addClass('classpath-widget');
         this.model.onSelectionChanged(e => {
             this.update();
         });
@@ -72,7 +73,6 @@ export class BuildPathTreeWidget extends TreeWidget {
         let leftView = super.render();
         return (
             <div>
-                <h4>WHY</h4>
                 { leftView }
             </div>
         );

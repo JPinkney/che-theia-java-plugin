@@ -1,10 +1,32 @@
 .classpath-panel {
-    width: 45%;
     float: left;
-    padding-left: calc(var(--theia-ui-padding)*2)
+    padding-left: calc(var(--theia-ui-padding)*2);
+    height: 100%;
+    padding-top: 6px;
+}
+
+.classpath-panel-left {
+    width: 30%;
+}
+
+.classpath-panel-right {
+    width: 55%;
 }
 
 .classpath-modal {
-    min-height: 450px;
-    min-width: 650px;
+    min-height: 450px !important;
+    min-width: 650px !important;
+}
+
+.classpath-content {
+    height: 420px;
+}
+
+.classpath-widget {
+    height: 100%;
+}
+
+.classpath-button-right {
+    float: right;
+    width: 10%;
 }

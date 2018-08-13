@@ -30,6 +30,7 @@ export class ClasspathTreeWidget extends TreeWidget {
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider
     ) {
         super(props, model, contextMenuRenderer);
+        this.addClass('classpath-widget');
         this.model.onSelectionChanged(e => {
             this.update();
         });
@@ -69,9 +70,13 @@ export class ClasspathTreeWidget extends TreeWidget {
         let leftView = super.render();
         return (
             <div>
-                <h4>This will be the title</h4>
-                { leftView }
-                <button>Button with some text</button>
+                <div>
+                    <h4>This will be the title</h4>
+                    { leftView }
+                </div>                
+                <div className={'classpath-button-right'}>
+                    <button>Button with some text</button>
+                </div>
             </div>
         );
     }
