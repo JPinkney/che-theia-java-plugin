@@ -12,7 +12,8 @@
     "@theia/core": "0.3.13",
     "@theia/java": "0.3.13",
     "@theia/editor": "0.3.13",
-    "@theia/languages": "0.3.13"
+    "@theia/languages": "0.3.13",
+    "@theia/filesystem": "0.3.13"
   },
   "devDependencies": {
     "rimraf": "2.6.2",

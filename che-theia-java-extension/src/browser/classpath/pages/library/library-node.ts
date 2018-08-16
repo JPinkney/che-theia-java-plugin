@@ -17,26 +17,32 @@
 import { TreeNode, CompositeTreeNode } from "@theia/core/lib/browser";
 import { ClasspathTreeWidget } from "../../classpath-tree-widget";
 import { ClasspathNode } from "../../node/classpath-node";
+import { ClasspathContainer } from "../../classpath-container";
+import { WorkspaceService } from "@theia/workspace/lib/browser";
 
 /**
  * This node appears on the left side of the classpath and on selection updates the classpathTreeWidget.
  */
 export class LibraryNode implements ClasspathNode {
     
+    static LibraryTitle = "This is the library or whatever";
+
     id: string;
     name: string;
     parent: Readonly<CompositeTreeNode>;
     previousSibling?: TreeNode | undefined;
     nextSibling?: TreeNode | undefined;
     selected: boolean;
-    static LibraryTitle = "This is the library or whatever";
+    workspaceService: WorkspaceService;
+    classpathContainer: ClasspathContainer;
     
-    constructor(parent: Readonly<CompositeTreeNode>) {
+    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer) {
         this.parent = parent;
         this.name = "Library";
         this.id = this.name;
         this.selected = true;
-
+        this.workspaceService = workspaceService;
+        this.classpathContainer = classpathContainer;
     }
 
     async onSelect(classpathTreeWidget: ClasspathTreeWidget) {
@@ -47,32 +53,26 @@ export class LibraryNode implements ClasspathNode {
          * 3. Potentially add action delegate for button
          */
 
-        // const root = await this.workspaceService.root;
-        // console.log(root);
-        // console.log(root !== undefined);
-        // if (root) {
-        //     const results = await this.classpathContainer.getClassPathEntries(root.uri);
+        const root = await this.workspaceService.root;
+        console.log(root);
+        console.log(root !== undefined);
+        if (root) {
+            console.log("Updating library node");
+            const results = await this.classpathContainer.getClassPathEntries(root.uri);
 
-        //     const newModel = {
-        //         id: 'build-path-root',
-        //         name: 'Java build path',
-        //         visible: true,
-        //         parent: undefined
-        //     } as CompositeTreeNode;
+            let resultNodes: TreeNode[] = [];
+            for (const result of results) {
+                const resultNode = {
+                    id: result.path,
+                    name: result.path,
+                    parent: classpathTreeWidget.model.root
+                } as TreeNode;
+                resultNodes.push(resultNode);
+            }
 
-        //     let resultNodes: TreeNode[] = [];
-        //     for (const result of results) {
-        //         const resultNode = {
-        //             id: result.path,
-        //             name: result.path,
-        //             parent: newModel
-        //         } as TreeNode;
-        //         resultNodes.push(resultNode);
-        //     }
-
-        //     newModel.children = resultNodes;
-            
-        // }
+            classpathTreeWidget.updateWidget(LibraryNode.LibraryTitle, resultNodes);
+            console.log("Updated library node");
+        }
     }
 
 }

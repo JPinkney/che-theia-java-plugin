@@ -17,26 +17,33 @@
 import { TreeNode, CompositeTreeNode } from "@theia/core/lib/browser";
 import { ClasspathTreeWidget } from "../../classpath-tree-widget";
 import { ClasspathNode } from "../../node/classpath-node";
+import { WorkspaceService } from "@theia/workspace/lib/browser";
+import { ClasspathContainer } from "../../classpath-container";
 
 export class SourceNode implements ClasspathNode {
     
+    static SourceTitle = "This is the Source stuff or whatever";
+
     id: string;
     name: string;
     parent: Readonly<CompositeTreeNode>;
     previousSibling?: TreeNode | undefined;
     nextSibling?: TreeNode | undefined;
     selected: boolean;
-
-    static SourceTitle = "This is the library or whatever";
+    workspaceService: WorkspaceService;
+    classpathContainer: ClasspathContainer;
     
-    constructor(parent: Readonly<CompositeTreeNode>) {
+    
+    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer) {
         this.parent = parent;
         this.name = "Source";
         this.id = this.name;
         this.selected = false;
+        this.workspaceService = workspaceService;
+        this.classpathContainer = classpathContainer;
     }
 
-    onSelect(classpathTreeWidget: ClasspathTreeWidget) {
+    async onSelect(classpathTreeWidget: ClasspathTreeWidget) {
         /**
          * We need to do a few things here
          * 1. Update the model by doing the call to jdt.ls
@@ -44,16 +51,13 @@ export class SourceNode implements ClasspathNode {
          * 3. Potentially add action delegate for button
          */
         
-        console.log("The root is");
-        console.log(classpathTreeWidget.model.root);
         this.createClassPathTree(classpathTreeWidget);
-        
     }
 
     public createClassPathTree(classpathTreeWidget: ClasspathTreeWidget) {
         if (classpathTreeWidget.model.root) {
             const nodes = this.createClassPathTreeChildren(classpathTreeWidget.model.root);
-            classpathTreeWidget.updateModel(nodes);
+            classpathTreeWidget.updateWidget(SourceNode.SourceTitle, nodes);
         }
     }
 
@@ -64,7 +68,13 @@ export class SourceNode implements ClasspathNode {
             parent,
             selected: false
         } as ClasspathNode;
-        return [librariesNode];
+        const librariesNode2 = {
+            id: "build-path-libraries-node4",
+            name: "This is new node sdfsdf",
+            parent,
+            selected: false
+        } as ClasspathNode;
+        return [librariesNode, librariesNode2];
     }
 
 }

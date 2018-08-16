@@ -19,9 +19,11 @@ import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNod
 import { ClasspathTreeWidget } from './classpath-tree-widget';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { ClasspathNode } from './node/classpath-node';
-import * as React from 'react';
+// import * as React from 'react';
 import { SourceNode } from './pages/source/source-node';
 import { LibraryNode } from './pages/library/library-node';
+import { ClasspathContainer } from './classpath-container';
+import { WorkspaceService } from '@theia/workspace/lib/browser';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
@@ -34,7 +36,9 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(TreeModel) readonly model: TreeModel,
         @inject(ContextMenuRenderer) readonly contextMenuRenderer: ContextMenuRenderer,
         @inject(ClasspathTreeWidget) protected readonly classpathTreeWidget: ClasspathTreeWidget,
-        @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider
+        @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider,
+        @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+        @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
@@ -60,18 +64,19 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     private createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): ClasspathNode[] {
-        const libraryNode = new LibraryNode(parent);
-        const sourceNode = new SourceNode(parent);
+        const libraryNode = new LibraryNode(parent, this.workspaceService, this.classpathContainer);
+        libraryNode.onSelect(this.classpathTreeWidget);
+        const sourceNode = new SourceNode(parent, this.workspaceService, this.classpathContainer);
         return [libraryNode, sourceNode];
     }
 
-    protected render(): React.ReactNode {
-        let leftView = super.render();
-        return (
-            <div>
-                { leftView }
-            </div>
-        );
-    }
+    // protected render(): React.ReactNode {
+    //     let leftView = super.render();
+    //     return (
+    //         <div>
+    //             { leftView }
+    //         </div>
+    //     );
+    // }
 
 }

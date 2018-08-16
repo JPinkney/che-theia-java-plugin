@@ -28,6 +28,7 @@ import { BuildPathTreeWidget } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
 import { ClasspathResolver } from './classpath/classpath-resolver';
 import { ClasspathContainer } from './classpath/classpath-container';
+import { FileDialogService } from './classpath/file-dialog-service';
 
 export default new ContainerModule((bind) => {
 
@@ -45,6 +46,8 @@ export default new ContainerModule((bind) => {
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
 
+    bind(FileDialogService).toSelf().inSingletonScope();
+    
     bind(ClasspathResolver).toSelf().inSingletonScope();
     bind(ClasspathContainer).toSelf().inSingletonScope();
     

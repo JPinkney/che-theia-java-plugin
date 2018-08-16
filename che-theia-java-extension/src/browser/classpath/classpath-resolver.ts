@@ -73,7 +73,14 @@ export class ClasspathResolver  {
      * TODO
      */
     updateClasspath() {
+        const classpathEntries: any = [];
+
+        this.libs.forEach(path => classpathEntries.push(path));
+        this.containers.forEach(entry => classpathEntries.push(entry));
+        this.sources.forEach(path => classpathEntries.push(path));
+        this.projects.forEach(path => classpathEntries.push(path));
         
+        //Classpath updater set raw classpath
     }
 
 }
