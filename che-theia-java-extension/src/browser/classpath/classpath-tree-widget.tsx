@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, TreeNode } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import * as React from 'react';
 import { ClasspathNode } from './node/classpath-node';
@@ -31,9 +31,6 @@ export class ClasspathTreeWidget extends TreeWidget {
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
-        this.model.onSelectionChanged(e => {
-            this.update();
-        });
     }
 
     public createClassPathTree() {
@@ -45,22 +42,31 @@ export class ClasspathTreeWidget extends TreeWidget {
         } as CompositeTreeNode;
         rootNode.children = this.createClassPathTreeChildren(rootNode);
         this.model.root = rootNode;
+        console.log(this.model.root);
+    }
+
+    updateModel(model: TreeNode[]) {
+        console.log("Trying to set");
+        if (CompositeTreeNode.is(this.model.root)) {
+            this.model.root.children = model;
+            this.model.refresh();
+        }
+        console.log("Set");
+        this.update();
     }
 
     private createClassPathTreeChildren(parent: Readonly<CompositeTreeNode>): ClasspathNode[] {
         const librariesNode = {
-            id: "build-path-libraries-node2",
-            name: "Some Tree Leaf 2",
+            id: "build-path-libraries-node",
+            name: "Libraries",
             parent,
-            visible: true,
             selected: true
         } as ClasspathNode;
 
         const sourceNode = {
-            id: "build-path-sources-node2",
-            name: "Some Tree Leaf 2",
+            id: "build-path-sources-node",
+            name: "Sources",
             parent,
-            visible: true,
             selected: false
         } as ClasspathNode;
         return [librariesNode, sourceNode];
@@ -70,8 +76,8 @@ export class ClasspathTreeWidget extends TreeWidget {
         let leftView = super.render();
         return (
             <div>
-                <div>
-                    <h4>This will be the title</h4>
+                <div className={'classpath-tree-left'}>
+                    <h4>hello world</h4>
                     { leftView }
                 </div>                
                 <div className={'classpath-button-right'}>

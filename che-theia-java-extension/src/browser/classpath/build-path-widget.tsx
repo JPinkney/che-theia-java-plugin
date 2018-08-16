@@ -20,6 +20,8 @@ import { ClasspathTreeWidget } from './classpath-tree-widget';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { ClasspathNode } from './node/classpath-node';
 import * as React from 'react';
+import { SourceNode } from './pages/source/source-node';
+import { LibraryNode } from './pages/library/library-node';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
@@ -37,6 +39,8 @@ export class BuildPathTreeWidget extends TreeWidget {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
         this.model.onSelectionChanged(e => {
+            const clickedNode = e[0] as ClasspathNode;
+            clickedNode.onSelect(this.classpathTreeWidget);
             this.update();
         });
     }
@@ -53,20 +57,9 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     private createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): ClasspathNode[] {
-        const librariesNode = {
-            id: "build-path-libraries-node",
-            name: "Libraries",
-            parent,
-            selected: true
-        } as ClasspathNode;
-
-        const sourceNode = {
-            id: "build-path-sources-node",
-            name: "Sources",
-            parent,
-            selected: false
-        } as ClasspathNode;
-        return [librariesNode, sourceNode];
+        const libraryNode = new LibraryNode(parent);
+        const sourceNode = new SourceNode(parent);
+        return [libraryNode, sourceNode];
     }
 
     protected render(): React.ReactNode {

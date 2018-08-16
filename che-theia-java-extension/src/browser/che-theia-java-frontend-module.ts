@@ -26,6 +26,8 @@ import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
 import { ClasspathTreeWidget } from './classpath/classpath-tree-widget';
 import { BuildPathTreeWidget } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
+import { ClasspathResolver } from './classpath/classpath-resolver';
+import { ClasspathContainer } from './classpath/classpath-container';
 
 export default new ContainerModule((bind) => {
 
@@ -43,12 +45,15 @@ export default new ContainerModule((bind) => {
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
 
+    bind(ClasspathResolver).toSelf().inSingletonScope();
+    bind(ClasspathContainer).toSelf().inSingletonScope();
+    
     bind(BuildPathTreeWidget).toDynamicValue(ctx =>
         createBuildPathTreeWidget(ctx.container)
     );
     bind(WidgetFactory).toDynamicValue(context => ({
         id: "Build path tree widget",
-        createWidget: () => context.container.get<ClasspathTreeWidget>(ClasspathTreeWidget)
+        createWidget: () => context.container.get<BuildPathTreeWidget>(BuildPathTreeWidget)
     }));
 
     bind(ClasspathTreeWidget).toDynamicValue(ctx =>

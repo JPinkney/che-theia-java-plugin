@@ -13,21 +13,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
-import { SelectableTreeNode } from "@theia/core/lib/browser/tree/tree-selection";
-import { CompositeTreeNode } from "@theia/core/lib/browser/tree/tree";
+
+import { SelectableTreeNode } from "@theia/core/lib/browser";
 
 export interface ClasspathNode extends SelectableTreeNode {
-    viewOnClick: any;
-}
-
-export namespace ClasspathNode {
-    export function create(id: string, name: string, viewOnClick: any, selected: boolean, parent: Readonly<CompositeTreeNode>): ClasspathNode {
-        return <ClasspathNode>{
-            id,
-            name,
-            viewOnClick,
-            parent,
-            selected
-        };
-    }
+    onSelect: any
 }
