@@ -34,6 +34,7 @@ export class ClasspathTreeWidget extends TreeWidget {
     }
 
     public createClassPathTree() {
+        console.log("Class path stuff is being set");
         const rootNode = {
             id: 'classpath-root',
             name: 'Classpath Root',
@@ -41,7 +42,10 @@ export class ClasspathTreeWidget extends TreeWidget {
             parent: undefined
         } as CompositeTreeNode;
         rootNode.children = this.createClassPathTreeChildren(rootNode);
+        console.log("Excuse me?");
         this.model.root = rootNode;
+        console.log("Logging root");
+        console.log(this.model);
         console.log(this.model.root);
     }
 

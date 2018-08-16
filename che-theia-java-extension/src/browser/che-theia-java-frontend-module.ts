@@ -50,7 +50,8 @@ export default new ContainerModule((bind) => {
     
     bind(BuildPathTreeWidget).toDynamicValue(ctx =>
         createBuildPathTreeWidget(ctx.container)
-    );
+    ).inSingletonScope();
+
     bind(WidgetFactory).toDynamicValue(context => ({
         id: "Build path tree widget",
         createWidget: () => context.container.get<BuildPathTreeWidget>(BuildPathTreeWidget)
@@ -58,7 +59,7 @@ export default new ContainerModule((bind) => {
 
     bind(ClasspathTreeWidget).toDynamicValue(ctx =>
         createClassPathTreeWidget(ctx.container)
-    );
+    ).inSingletonScope();
     bind(WidgetFactory).toDynamicValue(context => ({
         id: "CLASSPATH_TREE_WIDGET",
         createWidget: () => context.container.get<ClasspathTreeWidget>(ClasspathTreeWidget)
