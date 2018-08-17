@@ -54,10 +54,8 @@ export class LibraryNode implements ClasspathNode {
          */
 
         const root = await this.workspaceService.root;
-        console.log(root);
-        console.log(root !== undefined);
         if (root) {
-            console.log("Updating library node");
+
             const results = await this.classpathContainer.getClassPathEntries(root.uri);
 
             let resultNodes: TreeNode[] = [];
@@ -70,6 +68,7 @@ export class LibraryNode implements ClasspathNode {
                 resultNodes.push(resultNode);
             }
 
+            console.log(resultNodes);
             classpathTreeWidget.updateWidget(LibraryNode.LibraryTitle, resultNodes);
             console.log("Updated library node");
         }

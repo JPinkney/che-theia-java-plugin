@@ -22,7 +22,6 @@ import * as React from 'react';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import { FileDialogFactory, DirNode } from '@theia/filesystem/lib/browser';
 import URI from '@theia/core/lib/common/uri';
-// import { ClasspathNode } from './node/classpath-node';
 
 @injectable()
 export class ClasspathTreeWidget extends TreeWidget {
@@ -97,6 +96,7 @@ export class ClasspathTreeWidget extends TreeWidget {
 
     storeChanges() {
         // UPDATE_PROJECT_CLASSPATH
+        
     }
 
 }

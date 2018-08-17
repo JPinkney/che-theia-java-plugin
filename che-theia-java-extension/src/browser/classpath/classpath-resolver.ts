@@ -14,8 +14,11 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { Emitter } from '@theia/core';
+import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
+import { ExecuteCommandRequest } from '@theia/languages/lib/browser';
+import { UPDATE_PROJECT_CLASSPATH } from '../che-ls-jdt-commands';
 
 export interface ClasspathEntry {
     entryKind: ClasspathEntryKind,
@@ -36,10 +39,12 @@ export class ClasspathResolver  {
 
     private static WORKSPACE_PATH = "/projects";
 
-    private libs = new Set();
-    private containers = new Set();
-    private sources = new Set();
-    private projects = new Set();
+    @inject(LanguageClientProvider) protected readonly languageClientProvider!: LanguageClientProvider;
+
+    private libs = new Set<string>();
+    private containers = new Set<ClasspathEntry>();
+    private sources = new Set<string>();
+    private projects = new Set<string>();
 
     private readonly classPathChanged = new Emitter<ClasspathEntry>();
     readonly onClassPathChanged = this.classPathChanged.event;
@@ -72,15 +77,39 @@ export class ClasspathResolver  {
      * Concatenates classpath entries and update classpath file
      * TODO
      */
-    updateClasspath() {
-        const classpathEntries: any = [];
+    async updateClasspath(projectURI: string) {
+        const classpathEntries: ClasspathEntry[] = [];
 
-        this.libs.forEach(path => classpathEntries.push(path));
+        this.libs.forEach(path => classpathEntries.push({
+            path,
+            entryKind: ClasspathEntryKind.LIBRARY
+        } as ClasspathEntry));
+
         this.containers.forEach(entry => classpathEntries.push(entry));
-        this.sources.forEach(path => classpathEntries.push(path));
-        this.projects.forEach(path => classpathEntries.push(path));
+
+        this.sources.forEach(path => classpathEntries.push({
+            path,
+            entryKind: ClasspathEntryKind.SOURCE
+        } as ClasspathEntry));
+
+        this.projects.forEach(path => classpathEntries.push({
+            path,
+            entryKind: ClasspathEntryKind.PROJECT
+        } as ClasspathEntry));
         
         //Classpath updater set raw classpath
+        const javaClient = await this.languageClientProvider.getLanguageClient("java");
+        if (javaClient) {
+            await javaClient.sendRequest(ExecuteCommandRequest.type, {
+                command: UPDATE_PROJECT_CLASSPATH,
+                arguments: [
+                    {
+                        uri: projectURI,
+                        entries: classpathEntries
+                    }
+                ]
+            });
+        }
     }
 
 }

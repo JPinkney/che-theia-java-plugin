@@ -33,7 +33,6 @@ export class SourceNode implements ClasspathNode {
     workspaceService: WorkspaceService;
     classpathContainer: ClasspathContainer;
     
-    
     constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer) {
         this.parent = parent;
         this.name = "Source";

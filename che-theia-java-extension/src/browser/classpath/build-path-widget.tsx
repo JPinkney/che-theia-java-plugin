@@ -44,7 +44,6 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.addClass('classpath-widget');
         this.model.onSelectionChanged(e => {
             const clickedNode = e[0] as ClasspathNode;
-            console.log(this.classpathTreeWidget);
             clickedNode.onSelect(this.classpathTreeWidget);
             this.update();
         });
@@ -59,8 +58,6 @@ export class BuildPathTreeWidget extends TreeWidget {
         } as CompositeTreeNode;
         rootNode.children = this.createBuildPathTreeChildren(rootNode);
         this.model.root = rootNode;
-        console.log("Build path root");
-        console.log(this.model.root);
     }
 
     private createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): ClasspathNode[] {
@@ -69,14 +66,5 @@ export class BuildPathTreeWidget extends TreeWidget {
         const sourceNode = new SourceNode(parent, this.workspaceService, this.classpathContainer);
         return [libraryNode, sourceNode];
     }
-
-    // protected render(): React.ReactNode {
-    //     let leftView = super.render();
-    //     return (
-    //         <div>
-    //             { leftView }
-    //         </div>
-    //     );
-    // }
 
 }
