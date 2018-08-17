@@ -17,7 +17,7 @@ import {
 } from "@theia/core/lib/common";
 
 import { ContainerModule, Container, interfaces } from "inversify";
-import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget } from '@theia/core/lib/browser';
+import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget, TreeImpl, Tree, TreeModel, TreeModelImpl } from '@theia/core/lib/browser';
 
 import "../../src/browser/styles/icons.css";
 import "../../src/browser/styles/classpath.css";
@@ -28,7 +28,8 @@ import { BuildPathTreeWidget } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
 import { ClasspathResolver } from './classpath/classpath-resolver';
 import { ClasspathContainer } from './classpath/classpath-container';
-import { FileDialogService } from './classpath/file-dialog-service';
+import { ClasspathTree } from './classpath/classpath-tree';
+import { ClasspathModel } from './classpath/classpath-model';
 
 export default new ContainerModule((bind) => {
 
@@ -45,8 +46,6 @@ export default new ContainerModule((bind) => {
 
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
-
-    bind(FileDialogService).toSelf().inSingletonScope();
     
     bind(ClasspathResolver).toSelf().inSingletonScope();
     bind(ClasspathContainer).toSelf().inSingletonScope();
@@ -102,6 +101,14 @@ export function createClassPathTreeWidgetContainer(parent: interfaces.Container)
     const child = createTreeContainer(parent);
 
     child.rebind(TreeProps).toConstantValue(PROPS_PROPS2);
+
+    child.unbind(TreeImpl);
+    child.bind(ClasspathTree).toSelf();
+    child.rebind(Tree).toDynamicValue(ctx => ctx.container.get(ClasspathTree));
+
+    child.unbind(TreeModelImpl);
+    child.bind(ClasspathModel).toSelf();
+    child.rebind(TreeModel).toDynamicValue(ctx => ctx.container.get(ClasspathModel));
 
     child.unbind(TreeWidget);
     child.bind(ClasspathTreeWidget).toSelf();

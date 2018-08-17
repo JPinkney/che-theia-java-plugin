@@ -98,6 +98,10 @@ export class ClasspathResolver  {
         } as ClasspathEntry));
         
         //Classpath updater set raw classpath
+        this.update(projectURI, classpathEntries);
+    }
+
+    private async update(projectURI: string, classpathEntries: ClasspathEntry[]) {
         const javaClient = await this.languageClientProvider.getLanguageClient("java");
         if (javaClient) {
             await javaClient.sendRequest(ExecuteCommandRequest.type, {

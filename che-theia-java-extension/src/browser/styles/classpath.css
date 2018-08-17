@@ -14,8 +14,7 @@
 }
 
 .classpath-modal {
-    height: 450px !important;
-    width: 650px !important;
+    max-width: 650px;
 }
 
 .classpath-content {
@@ -37,4 +36,8 @@
     width: 70%;
     float: left;
     overflow: hidden;
+}
+
+.classpath-done-button {
+    margin-top: 13px;
 }

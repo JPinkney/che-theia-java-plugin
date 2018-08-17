@@ -15,28 +15,30 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, TreeNode, LabelProvider } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, TreeWidget, CompositeTreeNode, TreeNode, LabelProvider, TreeModel } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
-import { FileDialogService } from './file-dialog-service';
 import * as React from 'react';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
-import { FileDialogFactory, DirNode } from '@theia/filesystem/lib/browser';
+import { FileDialogFactory, DirNode, FileStatNode } from '@theia/filesystem/lib/browser';
 import URI from '@theia/core/lib/common/uri';
+import { ClasspathResolver } from './classpath-resolver';
+import { ClasspathModel } from './classpath-model';
 
 @injectable()
 export class ClasspathTreeWidget extends TreeWidget {
 
     private panelTitle: string = "";
+    isDirty = false;
 
     constructor(
         @inject(TreeProps) readonly props: TreeProps,
-        @inject(TreeModel) readonly model: TreeModel,
+        @inject(ClasspathModel) model: ClasspathModel,
         @inject(ContextMenuRenderer) readonly contextMenuRenderer: ContextMenuRenderer,
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider,
-        @inject(FileDialogService) protected readonly fileDialogService: FileDialogService,
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(FileDialogFactory) protected readonly fileDialogFactory: FileDialogFactory,
-        @inject(LabelProvider) protected readonly labelProvider: LabelProvider
+        @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
+        @inject(ClasspathResolver) protected readonly classpathResolver: ClasspathResolver
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
@@ -61,7 +63,6 @@ export class ClasspathTreeWidget extends TreeWidget {
         this.panelTitle = title;
         this.update();
     }
-
 
     protected render(): React.ReactNode {
         let leftView = super.render();
@@ -90,13 +91,46 @@ export class ClasspathTreeWidget extends TreeWidget {
             console.log("Clicked items are: ");
             console.log(result);
 
-            // We need to save this to jdt.ls perhaps do something else as well?
+            // We need to check if its folder or whatever
+            if (result) {
+                this.addNode(result);
+            }
         }
     }
 
-    storeChanges() {
-        // UPDATE_PROJECT_CLASSPATH
-        
+    async save() {
+        const root = await this.workspaceService.root;
+        if (root) {
+            this.classpathResolver.updateClasspath(root.uri);    
+        }
     }
+
+    private addNode(node: FileStatNode) {
+        if (CompositeTreeNode.is(this.model.root)) {
+            this.isDirty = true;
+
+            node.fileStat.children = [];
+            const newNode = this.fileStatToTreeRegularNode(node);
+            this.model.root.children = this.model.root.children.concat(newNode);
+            this.model.tree.addNode(newNode);
+            this.model.refresh();
+        }
+    }
+
+    private fileStatToTreeRegularNode(node: FileStatNode): TreeNode {
+        return {
+            id: node.id,
+            name: node.name,
+            parent: this.model.root
+        } as TreeNode;
+    }
+
+    // private removeNode(node: ClasspathNode) {
+    //     if (CompositeTreeNode.is(this.model.root)) {
+    //         this.isDirty = true;
+    //         this.model.root.children = this.model.root.children.filter(e => e.id !== node.id);
+    //         this.model.refresh();
+    //     }
+    // }
 
 }

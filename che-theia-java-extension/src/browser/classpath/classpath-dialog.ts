@@ -53,6 +53,19 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
 
         this.contentNode.appendChild(this.leftPanel);
         this.contentNode.appendChild(this.rightPanel);
+
+        const button = this.createButton('done');
+        button.onclick = () => this.classPathTreeWidget.save();
+        this.controlPanel.appendChild(button);
+
+        this.closeCrossNode.onclick = () => {
+            if (this.classPathTreeWidget.isDirty) {
+                //Confirm dialog
+            } else {
+                //Just close. I guess just don't do anything?
+                this.close();
+            }
+        };
     }
 
     @postConstruct()
