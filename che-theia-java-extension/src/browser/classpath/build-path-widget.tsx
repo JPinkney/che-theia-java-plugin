@@ -15,7 +15,7 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, LabelProvider } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { ClasspathNode } from './node/classpath-node';
 import { SourceNode } from './pages/source/source-node';
@@ -37,7 +37,8 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider,
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
-        @inject(ClasspathRightModel) protected readonly classpathRightModel: ClasspathRightModel
+        @inject(ClasspathRightModel) protected readonly classpathRightModel: ClasspathRightModel,
+        @inject(LabelProvider) protected readonly labelProvider: LabelProvider
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
@@ -60,9 +61,9 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<ClasspathNode[]> {
-        const libraryNode = new LibraryNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel);
-        
-        const sourceNode = new SourceNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel);
+        const libraryNode = new LibraryNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel, this.labelProvider);
+        libraryNode.onSelect();
+        const sourceNode = new SourceNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel, this.labelProvider);
         return [libraryNode, sourceNode];
     }
 

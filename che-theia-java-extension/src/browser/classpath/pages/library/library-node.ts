@@ -14,20 +14,19 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { CompositeTreeNode } from "@theia/core/lib/browser";
+import { CompositeTreeNode, LabelProvider } from "@theia/core/lib/browser";
 import { ClasspathNode } from "../../node/classpath-node";
 import { ClasspathContainer } from "../../classpath-container";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
-import { ClasspathListNode } from "../classpath-view";
 import { ClasspathEntryKind } from "../../classpath-resolver";
-import { ClasspathRightModel } from "../classpath-right-model";
+import { ClasspathRightModel, ClasspathModelProps } from "../classpath-right-model";
+import { ClasspathListNode } from "../right-view";
+import URI from "@theia/core/lib/common/uri";
 
 /**
  * This node appears on the left side of the classpath and on selection updates the classpathTreeWidget.
  */
 export class LibraryNode implements ClasspathNode {
-    
-    static LibraryTitle = "This is the library or whatever";
 
     id: string;
     name: string;
@@ -36,8 +35,10 @@ export class LibraryNode implements ClasspathNode {
     workspaceService: WorkspaceService;
     classpathContainer: ClasspathContainer;
     classpathModel: ClasspathRightModel;
+    labelProvider: LabelProvider;
+    filter = ['*.jar'];
     
-    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer, classpathModel: ClasspathRightModel) {
+    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer, classpathModel: ClasspathRightModel, labelProvider: LabelProvider) {
         this.parent = parent;
         this.name = "Library";
         this.id = this.name;
@@ -45,6 +46,16 @@ export class LibraryNode implements ClasspathNode {
         this.workspaceService = workspaceService;
         this.classpathContainer = classpathContainer;
         this.classpathModel = classpathModel;
+        this.labelProvider = labelProvider;
+    }
+
+    private classpathProps(): ClasspathModelProps {
+        return {
+            buttonText: "Add jar",
+            dialogTitle: "Add a jar",
+            filter: this.filter,
+            title: "This is the library or whatever"
+        }
     }
 
     async onSelect(): Promise<void> {
@@ -62,12 +73,14 @@ export class LibraryNode implements ClasspathNode {
 
                 const resultNode = {
                     id: result.path,
-                    name: result.path
+                    name: this.labelProvider.getName(new URI(result.path))
                 } as ClasspathListNode;
                 resultNodes.push(resultNode);
             }
 
+            this.classpathModel.selectedNode = this;
             this.classpathModel.classpathItems = resultNodes;
+            this.classpathModel.classpathModelProps = this.classpathProps();
         }
     }
 

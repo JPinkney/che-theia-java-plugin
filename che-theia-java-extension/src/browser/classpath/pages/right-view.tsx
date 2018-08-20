@@ -17,74 +17,54 @@
 import { ReactRenderer } from "@theia/core/lib/browser/widgets/react-renderer";
 import * as React from 'react';
 import { inject } from "inversify";
-import { LanguageClientProvider } from "@theia/languages/lib/browser/language-client-provider";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { FileDialogFactory, DirNode } from "@theia/filesystem/lib/browser";
 import { LabelProvider } from "@theia/core/lib/browser";
-import { ClasspathResolver } from "../classpath-resolver";
 import URI from "@theia/core/lib/common/uri";
 import { ClasspathRightModel } from "./classpath-right-model";
-import { ClasspathListRenderer } from "./classpath-view";
 
-export const ClasspathProps = Symbol('ClasspathProps');
-export interface ClasspathProps {
-
-    /**
-     * The title of the right panel
-     */
-    readonly title: string
-
-    /**
-     * The text of the button
-     */
-    readonly buttonText: string;
-
-    /**
-     * The filter for items in the open dialog
-     */
-    readonly openDialogFilter: any[];
-
-    /**
-     * dialog title when button is clicked
-     */
-    readonly dialogTitle: string;
+export interface ClasspathListNode {
+    id: string,
+    name: string
 }
 
 export class RightViewRenderer extends ReactRenderer {
-
-    @inject(LanguageClientProvider) protected readonly languageClientProvider!: LanguageClientProvider;
-    @inject(WorkspaceService) protected readonly workspaceService!: WorkspaceService;
-    @inject(FileDialogFactory) protected readonly fileDialogFactory!: FileDialogFactory;
-    @inject(LabelProvider) protected readonly labelProvider!: LabelProvider;
-    @inject(ClasspathResolver) protected readonly classpathResolver!: ClasspathResolver;
-    @inject(ClasspathRightModel) protected readonly classpathRightModel!: ClasspathRightModel;
-
-    constructor(@inject(ClasspathProps) protected readonly classpathProps: ClasspathProps) {
+    
+    constructor(
+    @inject(ClasspathRightModel) readonly classpathRightModel: ClasspathRightModel,
+    @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+    @inject(FileDialogFactory) protected readonly fileDialogFactory: FileDialogFactory,
+    @inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
         super();
+        this.classpathRightModel.onClasspathModelChanged(() => {
+            this.render();
+        });
     }
 
     protected doRender(): React.ReactNode {
-        const r = new ClasspathListRenderer();
-        r.render();
-        const host = r.host.toString();
-        console.log(host);
+        const classpathItems = this.classpathRightModel.classpathItems.map(value => this.renderClasspathItem(value));
         return (
             <div>
                 <div id="right-view-left" className={'classpath-tree-left'}>
-                    <h4>{ this.classpathProps.title }</h4>
-                    { host }
+                    <h4>{ this.classpathRightModel.classpathModelProps.title }</h4>
+                    { ...classpathItems }
                 </div>                
                 <div className={'classpath-button-right'}>
-                    <button onClick={this.openDialog.bind(this)}>{this.classpathProps.buttonText}</button>
+                    <button onClick={this.openDialog.bind(this)}>{ this.classpathRightModel.classpathModelProps.buttonText }</button>
                 </div>
             </div>
         );
     }
 
+    
+    protected renderClasspathItem(classpathListNode: ClasspathListNode): React.ReactNode {
+        return <div key={classpathListNode.id} className={'theia-TreeNode theia-TreeNodeContent'}>{classpathListNode.name}</div>;
+    }
+    
     async openDialog() {
         const root = await this.workspaceService.root;
         if (root) {
-            const dialog = this.fileDialogFactory({ title: this.classpathProps.dialogTitle });
+            const dialog = this.fileDialogFactory({ title: this.classpathRightModel.classpathModelProps.buttonText });
             const rootUri = new URI(root.uri);
             const name = this.labelProvider.getName(rootUri);
             const rootNode = DirNode.createRoot(root, name, "");
@@ -93,7 +73,10 @@ export class RightViewRenderer extends ReactRenderer {
 
             // Make sure its all filtered or whatever and we got result
             if (result) {
-                this.classpathRightModel.classpathItems.push(result);
+                this.classpathRightModel.classpathItems = this.classpathRightModel.classpathItems.concat({
+                    id: result.id,
+                    name: this.labelProvider.getName(result.uri)
+                }); 
             }
         }
     }

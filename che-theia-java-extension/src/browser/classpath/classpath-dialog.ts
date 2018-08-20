@@ -15,10 +15,13 @@
  ********************************************************************************/
 
 import { injectable, inject, postConstruct } from "inversify";
-import { AbstractDialog, Message, Widget } from "@theia/core/lib/browser";
+import { AbstractDialog, Message, Widget, LabelProvider } from "@theia/core/lib/browser";
 import { Disposable } from "@theia/core";
 import { BuildPathTreeWidget } from "./build-path-widget";
 import { RightViewRenderer } from "./pages/right-view";
+import { ClasspathRightModel } from "./pages/classpath-right-model";
+import { FileDialogFactory } from "@theia/filesystem/lib/browser";
+import { WorkspaceService } from "@theia/workspace/lib/browser";
 
 @injectable()
 export class DialogProps {
@@ -32,7 +35,11 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
     rightPanel: HTMLElement;
 
     constructor(@inject(DialogProps) protected readonly props: DialogProps,
-                @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget) {
+                @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget,
+                @inject(ClasspathRightModel) protected readonly classpathRightModel: ClasspathRightModel,
+                @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+                @inject(FileDialogFactory) protected readonly fileDialogFactory: FileDialogFactory,
+                @inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
         super(props);
 
         if (this.contentNode.parentElement) {
@@ -50,26 +57,26 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');
 
-        const c = new RightViewRenderer({dialogTitle: "blah", title: "blah2", buttonText: "woot", openDialogFilter: [".jar"]});
-        c.render();
-        const blah = c.host;
-        this.rightPanel.appendChild(blah);
+        const h = new RightViewRenderer(this.classpathRightModel, this.workspaceService, this.fileDialogFactory, this.labelProvider);
+        h.render();
+        const rightViewHost = h.host;
+        this.rightPanel.appendChild(rightViewHost);
 
         this.contentNode.appendChild(this.leftPanel);
         this.contentNode.appendChild(this.rightPanel);
 
-        // const button = this.createButton('done');
-        // button.onclick = () => this.classPathTreeWidget.save();
-        // this.controlPanel.appendChild(button);
+        const button = this.createButton('Done');
+        button.onclick = () => this.classpathRightModel.save();
+        this.controlPanel.appendChild(button);
 
-        // this.closeCrossNode.onclick = () => {
-        //     if (this.classPathTreeWidget.isDirty) {
-        //         //Confirm dialog
-        //     } else {
-        //         //Just close. I guess just don't do anything?
-        //         this.close();
-        //     }
-        // };
+        this.closeCrossNode.onclick = () => {
+            if (this.classpathRightModel.isDirty) {
+                //Confirm dialog
+            } else {
+                //Just close. I guess just don't do anything?
+                this.close();
+            }
+        };
     }
 
     @postConstruct()

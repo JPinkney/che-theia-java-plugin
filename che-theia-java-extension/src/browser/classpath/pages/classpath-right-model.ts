@@ -15,6 +15,16 @@
  ********************************************************************************/
 
 import { injectable } from "inversify";
+import { Emitter, Event } from "@theia/core";
+import { ClasspathListNode } from "./right-view";
+import { ClasspathNode } from "../node/classpath-node";
+
+export interface ClasspathModelProps {
+    title: string;
+    buttonText: string;
+    filter: string[];
+    dialogTitle: string;
+}
 
 /**
  * This is the model of classpath items that the build path widget manipulates to show class path items on the right
@@ -22,14 +32,57 @@ import { injectable } from "inversify";
 @injectable()
 export class ClasspathRightModel {
   
-    private classpathItemList: any[] = [];
+    protected readonly onClasspathModelChangedEmitter: Emitter<void> = new Emitter();
+    public onClasspathModelChanged: Event<void> = this.onClasspathModelChangedEmitter.event;
 
-    set classpathItems(classpathItems: any[]){
-        this.classpathItemList = classpathItems;
+    private classpathItemList: Map<string, ClasspathListNode[]> = new Map<string, ClasspathListNode[]>();
+    
+    selectedNode: ClasspathNode | undefined;
+
+    isDirty = false;
+
+    private classpathModelProp: ClasspathModelProps = {
+        buttonText: "",
+        dialogTitle: "",
+        filter: [],
+        title: ""   
+    };
+
+    setClasspathItems(id: string, classpathItems: any[]){
+        this.isDirty = true;
+        this.classpathItemList.set(id, classpathItems);
+        this.onClasspathModelChangedEmitter.fire(undefined);
     }
 
-    get classpathItems() {
-        return this.classpathItemList;
+    set classpathItems(classpathItems: ClasspathListNode[]){
+        if (this.selectedNode) {
+            this.isDirty = true;
+            this.classpathItemList.set(this.selectedNode.id, classpathItems);
+            this.onClasspathModelChangedEmitter.fire(undefined);
+        }
+    }
+
+    getClasspathItems(id: string): ClasspathListNode[] {
+        return this.classpathItemList.get(id) || [];
+    }
+
+    get classpathItems(): ClasspathListNode[] {
+        return this.selectedNode ? this.classpathItemList.get(this.selectedNode.id) || [] : [];
+    }
+
+    set classpathModelProps(classpathModelProps: ClasspathModelProps) {
+        this.classpathModelProp = classpathModelProps;
+        this.onClasspathModelChangedEmitter.fire(undefined);
+    }
+
+    get classpathModelProps() {
+        return this.classpathModelProp;
+    }
+
+    save() {
+        // Save to jdt.ls
+        
+        // Update the navigator tree icons
     }
 
 }

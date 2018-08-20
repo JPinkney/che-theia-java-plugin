@@ -17,5 +17,6 @@
 import { SelectableTreeNode } from "@theia/core/lib/browser";
 
 export interface ClasspathNode extends SelectableTreeNode {
-    onSelect(): void
+    onSelect(): void,
+    filter: string[]
 }
