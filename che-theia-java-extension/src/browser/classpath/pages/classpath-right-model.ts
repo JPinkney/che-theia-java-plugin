@@ -14,19 +14,22 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject } from 'inversify';
-import { TreeModelImpl } from '@theia/core/lib/browser';
-import { ClasspathTree } from './classpath-tree';
+import { injectable } from "inversify";
 
-
+/**
+ * This is the model of classpath items that the build path widget manipulates to show class path items on the right
+ */
 @injectable()
-export class ClasspathModel extends TreeModelImpl {
-        
-    tree: ClasspathTree
+export class ClasspathRightModel {
+  
+    private classpathItemList: any[] = [];
 
-    constructor(@inject(ClasspathTree) tree: ClasspathTree) {
-        super();
-        this.tree = tree;
+    set classpathItems(classpathItems: any[]){
+        this.classpathItemList = classpathItems;
+    }
+
+    get classpathItems() {
+        return this.classpathItemList;
     }
 
 }

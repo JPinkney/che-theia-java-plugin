@@ -15,10 +15,12 @@
  ********************************************************************************/
 
 import { TreeNode, CompositeTreeNode } from "@theia/core/lib/browser";
-import { ClasspathTreeWidget } from "../../classpath-tree-widget";
 import { ClasspathNode } from "../../node/classpath-node";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { ClasspathContainer } from "../../classpath-container";
+import { ClasspathListNode } from "../classpath-view";
+import { ClasspathEntryKind } from "../../classpath-resolver";
+import { ClasspathRightModel } from "../classpath-right-model";
 
 export class SourceNode implements ClasspathNode {
     
@@ -32,48 +34,41 @@ export class SourceNode implements ClasspathNode {
     selected: boolean;
     workspaceService: WorkspaceService;
     classpathContainer: ClasspathContainer;
+    classpathModel: ClasspathRightModel;
     
-    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer) {
+    constructor(parent: Readonly<CompositeTreeNode>, workspaceService: WorkspaceService, classpathContainer: ClasspathContainer, classpathModel: ClasspathRightModel) {
         this.parent = parent;
         this.name = "Source";
         this.id = this.name;
         this.selected = false;
         this.workspaceService = workspaceService;
         this.classpathContainer = classpathContainer;
+        this.classpathModel = classpathModel;
     }
 
-    async onSelect(classpathTreeWidget: ClasspathTreeWidget) {
-        /**
-         * We need to do a few things here
-         * 1. Update the model by doing the call to jdt.ls
-         * 2. Update the title to reflect the new view
-         * 3. Potentially add action delegate for button
-         */
+    async onSelect(): Promise<void> {
         
-        this.createClassPathTree(classpathTreeWidget);
-    }
+        const root = await this.workspaceService.root;
+        if (root) {
 
-    public createClassPathTree(classpathTreeWidget: ClasspathTreeWidget) {
-        if (classpathTreeWidget.model.root) {
-            const nodes = this.createClassPathTreeChildren(classpathTreeWidget.model.root);
-            classpathTreeWidget.updateWidget(SourceNode.SourceTitle, nodes);
+            const results = await this.classpathContainer.getClassPathEntries(root.uri);
+
+            let resultNodes: ClasspathListNode[] = [];
+            for (const result of results) {
+                
+                if (result.entryKind !== ClasspathEntryKind.SOURCE) {
+                    continue;
+                }
+
+                const resultNode = {
+                    id: result.path,
+                    name: result.path
+                } as ClasspathListNode;
+                resultNodes.push(resultNode);
+            }
+
+            this.classpathModel.classpathItems = resultNodes;
         }
-    }
-
-    private createClassPathTreeChildren(parent: TreeNode): TreeNode[] {
-        const librariesNode = {
-            id: "build-path-libraries-node3",
-            name: "This is new node",
-            parent,
-            selected: false
-        } as ClasspathNode;
-        const librariesNode2 = {
-            id: "build-path-libraries-node4",
-            name: "This is new node sdfsdf",
-            parent,
-            selected: false
-        } as ClasspathNode;
-        return [librariesNode, librariesNode2];
     }
 
 }

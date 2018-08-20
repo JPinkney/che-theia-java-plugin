@@ -18,7 +18,7 @@ import { injectable, inject, postConstruct } from "inversify";
 import { AbstractDialog, Message, Widget } from "@theia/core/lib/browser";
 import { Disposable } from "@theia/core";
 import { BuildPathTreeWidget } from "./build-path-widget";
-import { ClasspathTreeWidget } from "./classpath-tree-widget";
+import { RightViewRenderer } from "./pages/right-view";
 
 @injectable()
 export class DialogProps {
@@ -29,11 +29,10 @@ export class DialogProps {
 export abstract class ClassPathDialog extends AbstractDialog<void> {
     
     private leftPanel: HTMLElement;
-    private rightPanel: HTMLElement;
+    rightPanel: HTMLElement;
 
     constructor(@inject(DialogProps) protected readonly props: DialogProps,
-                @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget,
-                @inject(ClasspathTreeWidget) protected readonly classPathTreeWidget: ClasspathTreeWidget) {
+                @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget) {
         super(props);
 
         if (this.contentNode.parentElement) {
@@ -51,49 +50,49 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');
 
+        const c = new RightViewRenderer({dialogTitle: "blah", title: "blah2", buttonText: "woot", openDialogFilter: [".jar"]});
+        c.render();
+        const blah = c.host;
+        this.rightPanel.appendChild(blah);
+
         this.contentNode.appendChild(this.leftPanel);
         this.contentNode.appendChild(this.rightPanel);
 
-        const button = this.createButton('done');
-        button.onclick = () => this.classPathTreeWidget.save();
-        this.controlPanel.appendChild(button);
+        // const button = this.createButton('done');
+        // button.onclick = () => this.classPathTreeWidget.save();
+        // this.controlPanel.appendChild(button);
 
-        this.closeCrossNode.onclick = () => {
-            if (this.classPathTreeWidget.isDirty) {
-                //Confirm dialog
-            } else {
-                //Just close. I guess just don't do anything?
-                this.close();
-            }
-        };
+        // this.closeCrossNode.onclick = () => {
+        //     if (this.classPathTreeWidget.isDirty) {
+        //         //Confirm dialog
+        //     } else {
+        //         //Just close. I guess just don't do anything?
+        //         this.close();
+        //     }
+        // };
     }
 
     @postConstruct()
     protected init() {
         this.toDispose.push(this.buildPathTreeWidget);
-        this.toDispose.push(this.classPathTreeWidget);
     }
 
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
         Widget.attach(this.buildPathTreeWidget, this.leftPanel);
-        Widget.attach(this.classPathTreeWidget, this.rightPanel);
         this.toDisposeOnDetach.push(Disposable.create(() => {
             Widget.detach(this.buildPathTreeWidget);
-            Widget.detach(this.classPathTreeWidget);
         }));
     }
 
     protected onUpdateRequest(msg: Message): void {
         super.onUpdateRequest(msg);
         this.buildPathTreeWidget.update();
-        this.classPathTreeWidget.update();
     }
 
     protected onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg);
         this.buildPathTreeWidget.createBuildPathTree();
-        this.classPathTreeWidget.createClassPathTree();
     }
 
 }

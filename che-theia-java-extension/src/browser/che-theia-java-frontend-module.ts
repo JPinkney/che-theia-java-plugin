@@ -17,19 +17,17 @@ import {
 } from "@theia/core/lib/common";
 
 import { ContainerModule, Container, interfaces } from "inversify";
-import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget, TreeImpl, Tree, TreeModel, TreeModelImpl } from '@theia/core/lib/browser';
+import { KeybindingContribution, KeybindingContext, WidgetFactory, TreeProps, createTreeContainer, defaultTreeProps, TreeWidget } from '@theia/core/lib/browser';
 
 import "../../src/browser/styles/icons.css";
 import "../../src/browser/styles/classpath.css";
 import { FileStructure } from './navigation/file-structure';
 import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
-import { ClasspathTreeWidget } from './classpath/classpath-tree-widget';
 import { BuildPathTreeWidget } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
 import { ClasspathResolver } from './classpath/classpath-resolver';
 import { ClasspathContainer } from './classpath/classpath-container';
-import { ClasspathTree } from './classpath/classpath-tree';
-import { ClasspathModel } from './classpath/classpath-model';
+import { ClasspathRightModel } from './classpath/pages/classpath-right-model';
 
 export default new ContainerModule((bind) => {
 
@@ -44,6 +42,8 @@ export default new ContainerModule((bind) => {
 
     bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
 
+    bind(ClasspathRightModel).toSelf().inSingletonScope();
+
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
     
@@ -57,14 +57,6 @@ export default new ContainerModule((bind) => {
     bind(WidgetFactory).toDynamicValue(context => ({
         id: "Build path tree widget",
         createWidget: () => context.container.get<BuildPathTreeWidget>(BuildPathTreeWidget)
-    }));
-
-    bind(ClasspathTreeWidget).toDynamicValue(ctx =>
-        createClassPathTreeWidget(ctx.container)
-    ).inSingletonScope();
-    bind(WidgetFactory).toDynamicValue(context => ({
-        id: "CLASSPATH_TREE_WIDGET",
-        createWidget: () => context.container.get<ClasspathTreeWidget>(ClasspathTreeWidget)
     }));
 
 });
@@ -95,28 +87,3 @@ export function createBuildPathTreeWidgetContainer(parent: interfaces.Container)
 export function createBuildPathTreeWidget(parent: interfaces.Container): BuildPathTreeWidget {
     return createBuildPathTreeWidgetContainer(parent).get(BuildPathTreeWidget);
 }
-
-
-export function createClassPathTreeWidgetContainer(parent: interfaces.Container): Container {
-    const child = createTreeContainer(parent);
-
-    child.rebind(TreeProps).toConstantValue(PROPS_PROPS2);
-
-    child.unbind(TreeImpl);
-    child.bind(ClasspathTree).toSelf();
-    child.rebind(Tree).toDynamicValue(ctx => ctx.container.get(ClasspathTree));
-
-    child.unbind(TreeModelImpl);
-    child.bind(ClasspathModel).toSelf();
-    child.rebind(TreeModel).toDynamicValue(ctx => ctx.container.get(ClasspathModel));
-
-    child.unbind(TreeWidget);
-    child.bind(ClasspathTreeWidget).toSelf();
-
-    return child;
-}
-
-export function createClassPathTreeWidget(parent: interfaces.Container): ClasspathTreeWidget {
-    return createClassPathTreeWidgetContainer(parent).get(ClasspathTreeWidget);
-}
-

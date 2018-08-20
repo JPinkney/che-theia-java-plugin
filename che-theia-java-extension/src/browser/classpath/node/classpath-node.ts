@@ -15,8 +15,7 @@
  ********************************************************************************/
 
 import { SelectableTreeNode } from "@theia/core/lib/browser";
-import { ClasspathTreeWidget } from "../classpath-tree-widget";
 
 export interface ClasspathNode extends SelectableTreeNode {
-    onSelect(widget: ClasspathTreeWidget): any
+    onSelect(): void
 }
