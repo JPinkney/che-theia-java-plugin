@@ -16,14 +16,14 @@
 
 import { ClasspathEntry } from "../classpath-container";
 import { ClasspathViewNode } from "../node/classpath-node";
+import { OpenFileDialogProps } from "../../../../../node_modules/@theia/filesystem/lib/browser";
 
 export const IClasspathModel = Symbol('IClasspathModel');
 
 export interface ClasspathModelProps {
     title: string;
     buttonText: string;
-    filter: string[];
-    dialogTitle: string;
+    dialogProps: OpenFileDialogProps
 }
 
 export interface IClasspathModel {

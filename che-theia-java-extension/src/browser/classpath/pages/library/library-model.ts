@@ -19,10 +19,15 @@ export class LibraryModel {
     classpathProps(): ClasspathModelProps {
         return {
             buttonText: "Add jar",
-            dialogTitle: "Add a jar",
-            filter: [
-                "*.jar"
-            ],
+            dialogProps: {
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                title: "Add a jar",
+                filters: {
+                    "jars": ["jar"]
+                }
+            },
             title: "This is the library or whatever"
         }
     }

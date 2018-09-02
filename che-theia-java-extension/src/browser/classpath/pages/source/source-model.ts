@@ -19,9 +19,13 @@ import { ClasspathViewNode } from "../../node/classpath-node";
     classpathProps(): ClasspathModelProps {
         return {
             buttonText: "Add folder",
-            dialogTitle: "Add a folder",
-            filter: [],
-            title: "This is the library or whatever"
+            title: "This is the library or whatever",
+            dialogProps: {
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                title: "Add a folder"
+            }
         }
     }
     

@@ -61,9 +61,9 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<ClasspathNode[]> {
-        const root = await this.workspaceService.root;
-        if (root) {
-            const classpathNodes = await this.classpathContainer.getClassPathEntries(root.uri);         
+        const roots = await this.workspaceService.roots;
+        if (roots) {
+            const classpathNodes = await this.classpathContainer.getClassPathEntries(roots[0].uri);         
 
             this.classpathContainer.resolveClasspathEntries(classpathNodes);
             const libraryNode = this.createLibraryNode(parent, classpathNodes);

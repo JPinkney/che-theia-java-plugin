@@ -20,8 +20,7 @@ import { LanguageClientProvider } from '@theia/languages/lib/browser/language-cl
 import { ClasspathContainer, ClasspathEntry } from './classpath-container';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import * as React from 'react';
-import { FileDialogFactory, DirNode } from '@theia/filesystem/lib/browser';
-import URI from '@theia/core/lib/common/uri';
+import { FileDialogService } from '@theia/filesystem/lib/browser';
 import { IClasspathModel } from './pages/classpath-model';
 import { ClasspathViewNode } from './node/classpath-node';
 
@@ -47,8 +46,8 @@ export class ClasspathView extends TreeWidget {
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
         @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-        @inject(FileDialogFactory) protected readonly fileDialogFactory: FileDialogFactory,
-        @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[]
+        @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[],
+        @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
     ) {
         super(props, classpathTreeModel, contextMenuRenderer);
         this.addClass('classpath-widget');
@@ -116,14 +115,14 @@ export class ClasspathView extends TreeWidget {
     }
 
     async openDialog() {
-        const root = await this.workspaceService.root;
-        if (root) {
-            const dialog = this.fileDialogFactory({ title: this.activeClasspathModel.classpathProps().buttonText });
-            const rootUri = new URI(root.uri);
-            const name = this.labelProvider.getName(rootUri);
-            const rootNode = DirNode.createRoot(root, name, "");
-            dialog.model.navigateTo(rootNode);
-            const result = await dialog.open();
+        const roots = await this.workspaceService.roots;
+        if (roots) {
+            const result = await this.fileDialogService.show(this.activeClasspathModel.classpathProps().dialogProps);
+            // const rootUri = new URI(roots[0].uri);
+            // const name = this.labelProvider.getName(rootUri);
+            // const rootNode = DirNode.createRoot(roots[0], name, "");
+            // dialog.model.navigateTo(rootNode);
+            // const result = await dialog.open();
 
             // Make sure its all filtered or whatever and we got result
             if (result) {
@@ -140,9 +139,9 @@ export class ClasspathView extends TreeWidget {
     }
 
     async save() {
-        const root = await this.workspaceService.root;
-        if (root) {
-            this.classpathContainer.updateClasspath(root.uri);
+        const roots = await this.workspaceService.roots;
+        if (roots) {
+            this.classpathContainer.updateClasspath(roots[0].uri);
         }
     }
 }

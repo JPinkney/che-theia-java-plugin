@@ -37,9 +37,9 @@ export class ClasspathDecorator implements TreeDecorator {
     }
 
     async decorations(tree: Tree): Promise<Map<string, TreeDecoration.Data>> {
-        const root = await this.workspaceService.root;
-        if (root) {
-            const classpathItems = await this.classpathContainer.getClasspathItems(root.uri);
+        const roots = await this.workspaceService.roots;
+        if (roots) {
+            const classpathItems = await this.classpathContainer.getClasspathItems(roots[0].uri);
             return this.collectDecorators(tree, classpathItems);
         }
         return new Map();

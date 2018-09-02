@@ -25,9 +25,14 @@ import { FileStructure } from './navigation/file-structure';
 import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
 import { BuildPathTreeWidget } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
-import { ClasspathResolver } from './classpath/classpath-resolver';
 import { ClasspathContainer } from './classpath/classpath-container';
-import { ClasspathRightModel } from './classpath/pages/classpath-right-model';
+import { ClasspathView } from './classpath/classpath-view';
+import { SourceModel } from './classpath/pages/source/source-model';
+import { LibraryModel } from './classpath/pages/library/library-model';
+import { ClasspathDecorator } from './classpath/classpath-tree-decorator';
+import { IClasspathModel } from './classpath/pages/classpath-model';
+
+import { NavigatorTreeDecorator } from '@theia/navigator/lib/browser/navigator-decorator-service';
 
 export default new ContainerModule((bind) => {
 
@@ -42,14 +47,17 @@ export default new ContainerModule((bind) => {
 
     bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
 
-    bind(ClasspathRightModel).toSelf().inSingletonScope();
-
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
-    
-    bind(ClasspathResolver).toSelf().inSingletonScope();
+
     bind(ClasspathContainer).toSelf().inSingletonScope();
     
+    bind(LibraryModel).toSelf().inSingletonScope();
+    bind(SourceModel).toSelf().inSingletonScope();
+
+    bind(IClasspathModel).to(LibraryModel).inSingletonScope();
+    bind(IClasspathModel).to(SourceModel).inSingletonScope();
+
     bind(BuildPathTreeWidget).toDynamicValue(ctx =>
         createBuildPathTreeWidget(ctx.container)
     ).inSingletonScope();
@@ -58,6 +66,18 @@ export default new ContainerModule((bind) => {
         id: "Build path tree widget",
         createWidget: () => context.container.get<BuildPathTreeWidget>(BuildPathTreeWidget)
     }));
+
+    bind(ClasspathView).toDynamicValue(ctx =>
+        createClassPathTreeWidget(ctx.container)
+    ).inSingletonScope();
+
+    bind(WidgetFactory).toDynamicValue(context => ({
+        id: "Build path tree widget 2",
+        createWidget: () => context.container.get<ClasspathView>(ClasspathView)
+    }));
+
+    bind(ClasspathDecorator).toSelf().inSingletonScope();
+    bind(NavigatorTreeDecorator).toService(ClasspathDecorator);
 
 });
 
@@ -86,4 +106,19 @@ export function createBuildPathTreeWidgetContainer(parent: interfaces.Container)
 
 export function createBuildPathTreeWidget(parent: interfaces.Container): BuildPathTreeWidget {
     return createBuildPathTreeWidgetContainer(parent).get(BuildPathTreeWidget);
+}
+
+export function createClassPathTreeWidgetContainer(parent: interfaces.Container): Container {
+    const child = createTreeContainer(parent);
+
+    child.rebind(TreeProps).toConstantValue(PROPS_PROPS);
+
+    child.unbind(TreeWidget);
+    child.bind(ClasspathView).toSelf();
+
+    return child;
+}
+
+export function createClassPathTreeWidget(parent: interfaces.Container): ClasspathView {
+    return createClassPathTreeWidgetContainer(parent).get(ClasspathView);
 }
