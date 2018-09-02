@@ -14,15 +14,14 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject } from 'inversify';
+import { injectable, inject, multiInject } from 'inversify';
 import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, LabelProvider } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { ClasspathNode } from './node/classpath-node';
-import { SourceNode } from './pages/source/source-node';
-import { LibraryNode } from './pages/library/library-node';
-import { ClasspathContainer } from './classpath-container';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
-import { ClasspathRightModel } from './pages/classpath-right-model';
+import { ClasspathView } from './classpath-view';
+import { ClasspathContainer } from './classpath-container';
+import { IClasspathModel } from './pages/classpath-model';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
@@ -37,8 +36,9 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider,
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
-        @inject(ClasspathRightModel) protected readonly classpathRightModel: ClasspathRightModel,
-        @inject(LabelProvider) protected readonly labelProvider: LabelProvider
+        @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
+        @inject(ClasspathView) protected readonly classpathTreeWidget: ClasspathView,
+        @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[]
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
@@ -61,10 +61,46 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<ClasspathNode[]> {
-        const libraryNode = new LibraryNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel, this.labelProvider);
-        libraryNode.onSelect();
-        const sourceNode = new SourceNode(parent, this.workspaceService, this.classpathContainer, this.classpathRightModel, this.labelProvider);
-        return [libraryNode, sourceNode];
+        const root = await this.workspaceService.root;
+        if (root) {
+            const classpathNodes = await this.classpathContainer.getClassPathEntries(root.uri);         
+
+            this.classpathContainer.resolveClasspathEntries(classpathNodes);
+            const libraryNode = this.createLibraryNode(parent, classpathNodes);
+            const sourceNode = this.createSourceNode(parent, classpathNodes);
+            return [libraryNode, sourceNode];
+        }
+        return [];
+    }
+
+    private createLibraryNode(parent: Readonly<CompositeTreeNode>, classpathNodes: any[]) {
+        this.classpathModels[0].addClasspathNodes(classpathNodes);
+        const libraryNode = {
+            id: "Library",
+            name: "Library",
+            selected: true,
+            icon: "",
+            parent: parent,
+            onSelect: () => {
+                this.classpathTreeWidget.activeClasspathModel = this.classpathModels[0];
+            }
+        } as ClasspathNode;
+        return libraryNode;
+    }
+
+    private createSourceNode(parent: Readonly<CompositeTreeNode>, classpathNodes: any[]) {
+        this.classpathModels[1].addClasspathNodes(classpathNodes);
+        const sourceNode = {
+            id: "Source",
+            name: "Source",
+            selected: false,
+            icon: "",
+            parent: parent,
+            onSelect: () => {
+                this.classpathTreeWidget.activeClasspathModel = this.classpathModels[1];
+            }
+        } as ClasspathNode;
+        return sourceNode;
     }
 
 }

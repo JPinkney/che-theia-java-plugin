@@ -14,13 +14,22 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { SelectableTreeNode, TreeNode } from "@theia/core/lib/browser";
 import { ClasspathEntry } from "../classpath-container";
+import { ClasspathViewNode } from "../node/classpath-node";
 
-export interface ClasspathNode extends SelectableTreeNode {
-    onSelect(): void
+export const IClasspathModel = Symbol('IClasspathModel');
+
+export interface ClasspathModelProps {
+    title: string;
+    buttonText: string;
+    filter: string[];
+    dialogTitle: string;
 }
 
-export interface ClasspathViewNode extends TreeNode {
-    classpathEntry: ClasspathEntry
+export interface IClasspathModel {
+    classpathProps(): ClasspathModelProps;
+    classpathItems: ClasspathViewNode[];
+    addClasspathNodes(classpathItems: ClasspathEntry[]): void;
+    removeClasspathNode(classpathViewNode: ClasspathViewNode): void;
+    isDirty: boolean;
 }

@@ -14,14 +14,12 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, postConstruct } from "inversify";
-import { AbstractDialog, Message, Widget, LabelProvider } from "@theia/core/lib/browser";
+import { injectable, inject } from "inversify";
+import { AbstractDialog, Message, Widget, LabelProvider, ConfirmDialog } from "@theia/core/lib/browser";
 import { Disposable } from "@theia/core";
 import { BuildPathTreeWidget } from "./build-path-widget";
-import { RightViewRenderer } from "./pages/right-view";
-import { ClasspathRightModel } from "./pages/classpath-right-model";
-import { FileDialogFactory } from "@theia/filesystem/lib/browser";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
+import { ClasspathView } from "./classpath-view";
 
 @injectable()
 export class DialogProps {
@@ -36,10 +34,9 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
 
     constructor(@inject(DialogProps) protected readonly props: DialogProps,
                 @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget,
-                @inject(ClasspathRightModel) protected readonly classpathRightModel: ClasspathRightModel,
                 @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
-                @inject(FileDialogFactory) protected readonly fileDialogFactory: FileDialogFactory,
-                @inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
+                @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
+                @inject(ClasspathView) protected readonly classpathTreeWidget: ClasspathView) {
         super(props);
 
         if (this.contentNode.parentElement) {
@@ -57,38 +54,40 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');
 
-        const h = new RightViewRenderer(this.classpathRightModel, this.workspaceService, this.fileDialogFactory, this.labelProvider);
-        h.render();
-        const rightViewHost = h.host;
-        this.rightPanel.appendChild(rightViewHost);
-
         this.contentNode.appendChild(this.leftPanel);
         this.contentNode.appendChild(this.rightPanel);
 
         const button = this.createButton('Done');
-        button.onclick = () => this.classpathRightModel.save();
+        button.classList.add('classpath-button-done');
+        button.onclick = () => {
+            this.classpathTreeWidget.save();
+            this.close();
+        };
         this.controlPanel.appendChild(button);
 
-        this.closeCrossNode.onclick = () => {
-            if (this.classpathRightModel.isDirty) {
+        this.closeCrossNode.onclick = async () => {
+            if (this.classpathTreeWidget.isDirty()) {
                 //Confirm dialog
+                const dialog = new ConfirmDialog({
+                    title: `The classpath has been modified`,
+                    msg: 'Do you want to overwrite the classpath changes?',
+                    ok: 'Yes',
+                    cancel: 'No'
+                });
+                await dialog.open() ? this.classpathTreeWidget.save() : false;
             } else {
-                //Just close. I guess just don't do anything?
                 this.close();
             }
         };
     }
 
-    @postConstruct()
-    protected init() {
-        this.toDispose.push(this.buildPathTreeWidget);
-    }
-
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
         Widget.attach(this.buildPathTreeWidget, this.leftPanel);
+        Widget.attach(this.classpathTreeWidget, this.rightPanel);
         this.toDisposeOnDetach.push(Disposable.create(() => {
             Widget.detach(this.buildPathTreeWidget);
+            Widget.detach(this.classpathTreeWidget);
         }));
     }
 
@@ -100,6 +99,7 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
     protected onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg);
         this.buildPathTreeWidget.createBuildPathTree();
+        this.classpathTreeWidget.createClassPathTree();
     }
 
 }
