@@ -32,35 +32,47 @@ export class LibraryModel {
         }
     }
 
-    addClasspathNodes(classpathEntry: ClasspathEntry[]) {
-        this.isDirty = true;
-        for (const result of classpathEntry) {
-            if (result.entryKind !== ClasspathEntryKind.CONTAINER && result.entryKind !== ClasspathEntryKind.LIBRARY) {
-                continue;
+    addClasspathNodes(classpathEntry: ClasspathEntry[] | ClasspathEntry) {
+        if (Array.isArray(classpathEntry)) { 
+            for (const result of classpathEntry) {
+                if (result.entryKind !== ClasspathEntryKind.CONTAINER && result.entryKind !== ClasspathEntryKind.LIBRARY) {
+                    continue;
+                }
+    
+                const classpathNode = this.createClasspathNodes(result);
+                this.currentClasspathItems.set(result.path, classpathNode);
             }
-
-            let childNodes = [];
-            for (const child of result.children) {
-                const childNode = {
-                    id: child.path,
-                    name: this.labelProvider.getName(new URI(child.path)) + " - " + child.path,
-                    icon: "java-jar-icon",
-                    classpathEntry: child
-                } as ClasspathViewNode;
-                childNodes.push(childNode);
+        } else {
+            this.isDirty = true;
+            if (classpathEntry.entryKind === ClasspathEntryKind.CONTAINER || classpathEntry.entryKind === ClasspathEntryKind.LIBRARY) {
+                const classpathNode = this.createClasspathNodes(classpathEntry);
+                this.currentClasspathItems.set(classpathEntry.path, classpathNode);
             }
-
-            const resultNode = {
-                id: result.path,
-                name: this.labelProvider.getName(new URI(result.path)),
-                icon: "java-externalLibraries-icon",
-                children: childNodes,
-                parent: undefined,
-                expanded: false,
-                classpathEntry: result
-            } as ClasspathViewNode;
-            this.currentClasspathItems.set(result.path, resultNode);
         }
+    }
+
+    createClasspathNodes(result: ClasspathEntry) {
+        let childNodes = [];
+        for (const child of result.children) {
+            const childNode = {
+                id: child.path,
+                name: this.labelProvider.getName(new URI(child.path)) + " - " + child.path,
+                icon: "java-jar-icon",
+                classpathEntry: child
+            } as ClasspathViewNode;
+            childNodes.push(childNode);
+        }
+
+        const resultNode = {
+            id: result.path,
+            name: this.labelProvider.getName(new URI(result.path)),
+            icon: "java-externalLibraries-icon",
+            children: childNodes,
+            parent: undefined,
+            expanded: false,
+            classpathEntry: result
+        } as ClasspathViewNode;
+        return resultNode;
     }
 
     removeClasspathNode(classpathViewNode: ClasspathViewNode): void {

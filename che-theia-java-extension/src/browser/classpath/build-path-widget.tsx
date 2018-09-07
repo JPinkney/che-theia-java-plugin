@@ -68,6 +68,10 @@ export class BuildPathTreeWidget extends TreeWidget {
             this.classpathContainer.resolveClasspathEntries(classpathNodes);
             const libraryNode = this.createLibraryNode(parent, classpathNodes);
             const sourceNode = this.createSourceNode(parent, classpathNodes);
+            this.classpathContainer.onClasspathModelChangeEmitter.fire({
+                classpathItems: classpathNodes,
+                uri: roots[0].uri
+            });
             return [libraryNode, sourceNode];
         }
         return [];

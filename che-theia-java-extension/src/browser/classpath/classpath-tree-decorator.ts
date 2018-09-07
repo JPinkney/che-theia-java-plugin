@@ -15,11 +15,13 @@
  ********************************************************************************/
 
 import { TreeDecorator, TreeDecoration } from '@theia/core/lib/browser/tree/tree-decorator';
-import { Tree } from '@theia/core/lib/browser';
+import { Tree, WidgetManager } from '@theia/core/lib/browser';
 import { Event, Emitter } from '@theia/core/lib/common/event';
 import { injectable, inject } from 'inversify';
 import { ClasspathContainer, ClasspathEntry, ClasspathEntryKind } from './classpath-container';
-import { WorkspaceService } from '../../../../node_modules/@theia/workspace/lib/browser';
+import { WorkspaceService } from '@theia/workspace/lib/browser';
+import { FileNavigatorWidget, FILE_NAVIGATOR_ID } from '@theia/navigator/lib/browser/navigator-widget';
+import { JavaUtils } from '../java-utils';
 
 @injectable()
 export class ClasspathDecorator implements TreeDecorator {
@@ -29,10 +31,12 @@ export class ClasspathDecorator implements TreeDecorator {
     protected readonly emitter: Emitter<(tree: Tree) => Map<string, TreeDecoration.Data>>;
 
     constructor(@inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
-                @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService) {
+                @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
+                @inject(WidgetManager) protected readonly widgetManager: WidgetManager) {
         this.emitter = new Emitter();
-        this.classpathContainer.onClasspathModelChange((c) => {
-            this.fireDidChangeDecorations((tree: Tree) => this.collectDecorators(tree, c.classpathItems));
+        this.classpathContainer.onClasspathModelChange(c => {
+            this.collectDecorators(c.classpathItems, c.uri);
+            this.fireDidChangeDecorations((tree: Tree) => new Map());
         });
     }
 
@@ -40,29 +44,37 @@ export class ClasspathDecorator implements TreeDecorator {
         const roots = await this.workspaceService.roots;
         if (roots) {
             const classpathItems = await this.classpathContainer.getClasspathItems(roots[0].uri);
-            return this.collectDecorators(tree, classpathItems);
+            this.collectDecorators(classpathItems, roots[0].uri);
         }
         return new Map();
     }
 
-    protected collectDecorators(tree: Tree, classpathItems: ClasspathEntry[]): Map<string, TreeDecoration.Data> {
-        let classpathDecoratorMap = new Map<string, TreeDecoration.Data>();
-        for (const classpathItem of classpathItems) {
-            if (classpathItem.entryKind !== ClasspathEntryKind.SOURCE) {
-                continue;
-            }
-
-            let navigatorTreeNode = tree.getNode(classpathItem.path);
-            if (navigatorTreeNode) {
-                classpathDecoratorMap.set(navigatorTreeNode.id, {
-                    iconColor: "yellow",
-                    priority: 10
-                } as TreeDecoration.Data);
+    protected async collectDecorators(classpathItems: ClasspathEntry[], uri: string): Promise<void> {
+        const fileWidget = await this.widgetManager.tryGetWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
+        if (fileWidget) {
+            const tree = fileWidget.model;
+            for (const classpathItem of classpathItems) {
+                if (classpathItem.entryKind !== ClasspathEntryKind.SOURCE) {
+                    continue;
+                }
+    
+                const multiRootURI = JavaUtils.getMultiRootReadyURI(uri, classpathItem.path);
+                let navigatorTreeNode = tree.getNode(multiRootURI);
+                if (navigatorTreeNode) {
+                    // if (navigatorTreeNode.icon && navigatorTreeNode.icon.includes("java-source-folder-icon")) {
+                    //     Object.assign(navigatorTreeNode, {
+                    //         "icon": "fa fa-folder file-icon"
+                    //     });          
+                    // } else {
+                        Object.assign(navigatorTreeNode, {
+                            "icon": "java-source-folder-icon java-libraries-icon"
+                        });
+                    // }      
+                }
             }
         }
-        return classpathDecoratorMap;
     }
-
+    
     get onDidChangeDecorations(): Event<(tree: Tree) => Map<string, TreeDecoration.Data>> {
         return this.emitter.event;
     }

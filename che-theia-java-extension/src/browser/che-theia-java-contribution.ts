@@ -19,7 +19,7 @@ export const HELP = [...MAIN_MENU_BAR, '5_classpath'];
 
 export const ABOUT_COMMAND: Command = {
     id: 'core.about2',
-    label: 'About2'
+    label: 'Configure Classpath'
 };
 
 @injectable()

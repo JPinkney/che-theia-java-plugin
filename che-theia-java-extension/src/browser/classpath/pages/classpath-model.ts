@@ -29,7 +29,7 @@ export interface ClasspathModelProps {
 export interface IClasspathModel {
     classpathProps(): ClasspathModelProps;
     classpathItems: ClasspathViewNode[];
-    addClasspathNodes(classpathItems: ClasspathEntry[]): void;
-    removeClasspathNode(classpathViewNode: ClasspathViewNode): void;
+    addClasspathNodes(classpathItems: ClasspathEntry[] | ClasspathEntry): void;
+    removeClasspathNode(path: string): void;
     isDirty: boolean;
 }

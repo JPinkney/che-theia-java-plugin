@@ -51,7 +51,7 @@ export class ClasspathContainer  {
     private sources = new Set<string>();
     private projects = new Set<string>();
 
-    protected readonly onClasspathModelChangeEmitter: Emitter<ClasspathChangeNotification> = new Emitter();
+    readonly onClasspathModelChangeEmitter: Emitter<ClasspathChangeNotification> = new Emitter();
     public onClasspathModelChange: Event<ClasspathChangeNotification> = this.onClasspathModelChangeEmitter.event;
 
     constructor(@inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider) {
@@ -78,6 +78,13 @@ export class ClasspathContainer  {
                 default:
             }
         }
+    }
+
+    clearClasspathEntries() {
+        this.libs.clear();
+        this.containers.clear();
+        this.sources.clear();
+        this.projects.clear();
     }
 
     removeClasspathEntry(entry: ClasspathEntry): void {
@@ -127,9 +134,13 @@ export class ClasspathContainer  {
     }
 
     private async update(projectURI: string, classpathEntries: ClasspathEntry[]) {
+        console.log("Inside update");
+        console.log(projectURI);
+        console.log(classpathEntries);
         const javaClient = await this.languageClientProvider.getLanguageClient("java");
         if (javaClient) {
-            await javaClient.sendRequest(ExecuteCommandRequest.type, {
+            console.log("Sending request");
+            const result = await javaClient.sendRequest(ExecuteCommandRequest.type, {
                 command: UPDATE_PROJECT_CLASSPATH,
                 arguments: [
                     {
@@ -138,6 +149,8 @@ export class ClasspathContainer  {
                     }
                 ]
             });
+            console.log(result);
+            console.log("Finished request");
         }
     }
     

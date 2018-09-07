@@ -29,28 +29,41 @@ import { ClasspathViewNode } from "../../node/classpath-node";
         }
     }
     
-    addClasspathNodes(classpathEntry: ClasspathEntry[]) {
-        this.isDirty = true;
-        for (const result of classpathEntry) {
-            
-            if (result.entryKind !== ClasspathEntryKind.SOURCE) {
-                continue;
+    addClasspathNodes(classpathEntry: ClasspathEntry[] | ClasspathEntry) {
+        if (Array.isArray(classpathEntry)) {
+            for (const result of classpathEntry) {
+                
+                if (result.entryKind !== ClasspathEntryKind.SOURCE) {
+                    continue;
+                }
+    
+                const classpathViewNode = this.createClasspathNode(result);
+                this.currentClasspathItems.set(result.path, classpathViewNode);
             }
-
-            const resultNode = {
-                id: result.path,
-                name: this.labelProvider.getName(new URI(result.path)),
-                icon: "java-source-folder-icon",
-                parent: undefined,
-                classpathEntry: result
-            } as ClasspathViewNode;
-            this.currentClasspathItems.set(result.path, resultNode);
+        } else {
+            this.isDirty = true;
+            if (classpathEntry.entryKind === ClasspathEntryKind.SOURCE) {
+                const classpathViewNode = this.createClasspathNode(classpathEntry);
+                this.currentClasspathItems.set(classpathEntry.path, classpathViewNode);
+            }    
         }
     }
 
-    removeClasspathNode(classpathViewNode: ClasspathViewNode): void {
+    createClasspathNode(result: ClasspathEntry) {
+        const resultNode = {
+            id: result.path,
+            name: this.labelProvider.getName(new URI(result.path)),
+            icon: "java-source-folder-icon",
+            parent: undefined,
+            classpathEntry: result
+        } as ClasspathViewNode;
+        
+        return resultNode;
+    }
+
+    removeClasspathNode(path: string): void {
         this.isDirty = true;
-        this.currentClasspathItems.delete(classpathViewNode.classpathEntry.path);
+        this.currentClasspathItems.delete(path);
     }
 
     get classpathItems(): ClasspathViewNode[] {

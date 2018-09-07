@@ -88,7 +88,7 @@ export class ClasspathView extends TreeWidget {
 
     protected removeNode(node: TreeNode) {
         const classpathViewNode = node as ClasspathViewNode;
-        this.activeClasspathModel.removeClasspathNode(classpathViewNode);
+        this.activeClasspathModel.removeClasspathNode(classpathViewNode.classpathEntry.path);
         this.classpathContainer.removeClasspathEntry(classpathViewNode.classpathEntry);
     }
 
@@ -131,7 +131,7 @@ export class ClasspathView extends TreeWidget {
                     entryKind: 3,
                     path: result.fileStat.uri
                 } as ClasspathEntry;
-                this.activeClasspathModel.addClasspathNodes([newClasspathItem]);
+                this.activeClasspathModel.addClasspathNodes(newClasspathItem);
                 this.classpathContainer.resolveClasspathEntries([newClasspathItem]);
                 this.update();
             }

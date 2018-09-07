@@ -31,7 +31,8 @@ import { SourceModel } from './classpath/pages/source/source-model';
 import { LibraryModel } from './classpath/pages/library/library-model';
 import { ClasspathDecorator } from './classpath/classpath-tree-decorator';
 import { IClasspathModel } from './classpath/pages/classpath-model';
-
+import { MarkDirAsSourceAction } from './action/mark-dir-as-source';
+import { UnmarkDirAsSourceAction } from './action/unmark-dir-as-source';
 import { NavigatorTreeDecorator } from '@theia/navigator/lib/browser/navigator-decorator-service';
 
 export default new ContainerModule((bind) => {
@@ -44,6 +45,14 @@ export default new ContainerModule((bind) => {
     bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
     bind(KeybindingContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
+
+    bind(MarkDirAsSourceAction).toSelf().inSingletonScope();
+    bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));
+    bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));
+
+    bind(UnmarkDirAsSourceAction).toSelf().inSingletonScope();
+    bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(UnmarkDirAsSourceAction));
+    bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(UnmarkDirAsSourceAction));
 
     bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
 
