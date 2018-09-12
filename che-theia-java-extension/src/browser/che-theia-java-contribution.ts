@@ -12,33 +12,38 @@
 
 import { injectable, inject } from "inversify";
 import { CommandContribution, CommandRegistry, MenuContribution, MenuModelRegistry, MAIN_MENU_BAR, Command } from "@theia/core/lib/common";
-import { KeybindingContribution, KeybindingRegistry } from "@theia/core/lib/browser";
+import { KeybindingContribution, KeybindingRegistry, WidgetManager } from "@theia/core/lib/browser";
 import { ClassPathDialog } from "./classpath/classpath-dialog";
+import { WorkspaceService } from "@theia/workspace/lib/browser";
 
 export const HELP = [...MAIN_MENU_BAR, '5_classpath'];
 
-export const ABOUT_COMMAND: Command = {
-    id: 'core.about2',
+export const CONFIGURE_CLASSPATH_COMMAND: Command = {
+    id: 'java.configure.classpath',
     label: 'Configure Classpath'
 };
 
 @injectable()
 export class JavaExtensionContribution implements CommandContribution, MenuContribution, KeybindingContribution {
 
-    constructor(@inject(ClassPathDialog) protected readonly aboutDialog: ClassPathDialog) {
-
+    constructor(
+        @inject(ClassPathDialog) protected readonly aboutDialog: ClassPathDialog,
+        @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
+        @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService) {
     }
 
     registerCommands(registry: CommandRegistry): void {
-        registry.registerCommand(ABOUT_COMMAND, {
-            execute: () => this.aboutDialog.open()
+        registry.registerCommand(CONFIGURE_CLASSPATH_COMMAND, {
+            execute: e => {
+                this.aboutDialog.open();
+            }
         });
     }
 
     registerMenus(menus: MenuModelRegistry): void {
         menus.registerMenuAction(HELP, {
-            commandId: ABOUT_COMMAND.id,
-            label: 'Configure Classpath',
+            commandId: CONFIGURE_CLASSPATH_COMMAND.id,
+            label: CONFIGURE_CLASSPATH_COMMAND.label,
             order: '10'
         });
     }

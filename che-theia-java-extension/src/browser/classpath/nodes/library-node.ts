@@ -14,13 +14,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { SelectableTreeNode, TreeNode } from "@theia/core/lib/browser";
-import { ClasspathEntry } from "../classpath-container";
+import { injectable, inject } from "inversify";
+import { CompositeTreeNode, TreeWidget } from "@theia/core/lib/browser";
+import { LibraryView } from "../pages/library/library-view";
+import { IClasspathNode } from "./classpath-node";
 
-export interface ClasspathNode extends SelectableTreeNode {
-    onSelect(): void
-}
+@injectable()
+export class LibraryNode implements IClasspathNode {
+    
+    selected: boolean;
+    widget: TreeWidget;
+    id: string;
+    name: string;
+    parent: CompositeTreeNode | undefined;
 
-export interface ClasspathViewNode extends TreeNode {
-    classpathEntry: ClasspathEntry
+    constructor(@inject(LibraryView) protected readonly libraryView: LibraryView) {
+        this.selected = false;
+        this.id = "Library node";
+        this.name = this.id;
+        this.widget = libraryView;
+    }
+    
 }

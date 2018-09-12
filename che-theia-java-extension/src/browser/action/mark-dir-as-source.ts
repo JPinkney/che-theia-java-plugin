@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { inject, injectable, multiInject } from "inversify";
+import { inject, injectable } from "inversify";
 import { ClasspathContainer, ClasspathEntry, ClasspathEntryKind } from "../classpath/classpath-container";
 import { CommandContribution, MenuContribution, SelectionService, CommandRegistry, MenuModelRegistry, Command } from "@theia/core";
 import { UriAwareCommandHandler, UriCommandHandler } from "@theia/core/lib/common/uri-command-handler";
@@ -24,7 +24,7 @@ import { CompositeTreeNode, WidgetManager } from "@theia/core/lib/browser";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { FileNavigatorWidget, FILE_NAVIGATOR_ID } from "@theia/navigator/lib/browser/navigator-widget";
 import { JavaUtils } from "../java-utils";
-import { IClasspathModel } from "../classpath/pages/classpath-model";
+import { SourceView } from "../classpath/pages/source/source-view";
 
 
 export const MARKSOURCEDIR = [...NAVIGATOR_CONTEXT_MENU, '7_sourcedir'];
@@ -44,7 +44,7 @@ export class MarkDirAsSourceAction implements CommandContribution, MenuContribut
                 @inject(SelectionService) protected readonly selectionService: SelectionService,
                 @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
                 @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
-                @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[]) {
+                @inject(SourceView) protected readonly sourceView: SourceView) {
     }
 
     async performAction(projectURI: string, treeNodeID: string) {
@@ -57,7 +57,7 @@ export class MarkDirAsSourceAction implements CommandContribution, MenuContribut
         classpathItems.push(newClasspathItem);
         this.classpathContainer.resolveClasspathEntries(classpathItems);
         this.classpathContainer.updateClasspath(projectURI);
-        this.classpathModels[1].addClasspathNodes(newClasspathItem);
+        this.sourceView.classpathModel.addClasspathNodes(newClasspathItem);
     }
 
     registerCommands(commands: CommandRegistry): void {

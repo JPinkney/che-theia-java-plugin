@@ -64,4 +64,5 @@
 
 .java-remove-node-icon {
     background-image: url(icons/remove-node.svg) !important;
+    display: none;
 }

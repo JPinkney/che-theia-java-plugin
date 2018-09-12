@@ -14,15 +14,15 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { injectable, inject, multiInject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, TreeWidget, CompositeTreeNode, LabelProvider, TreeNode, NodeProps, TreeModel } from '@theia/core/lib/browser';
+import { injectable, inject } from 'inversify';
+import { ContextMenuRenderer, TreeProps, LabelProvider, TreeNode, NodeProps, TreeWidget, TreeModel } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
-import { ClasspathContainer, ClasspathEntry } from './classpath-container';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import * as React from 'react';
 import { FileDialogService } from '@theia/filesystem/lib/browser';
-import { IClasspathModel } from './pages/classpath-model';
-import { ClasspathViewNode } from './node/classpath-node';
+import { ClasspathContainer, ClasspathEntry } from '../../classpath-container';
+import { SourceModel } from './source-model';
+import { ClasspathViewNode } from '../../nodes/classpath-node';
 
 export interface ClasspathListNode {
     id: string,
@@ -33,53 +33,69 @@ export interface ClasspathListNode {
  * This is the left side of the panel that holds the libraries and the source node
  */
 @injectable()
-export class ClasspathView extends TreeWidget {
+export class SourceView extends TreeWidget {
 
-    activeClasspathModel: IClasspathModel;
-    classpathTreeModel: TreeModel;
+    classpathModel: SourceModel;
 
     constructor(
         @inject(TreeProps) readonly props: TreeProps,
-        @inject(TreeModel) classpathTreeModel: TreeModel,
+        @inject(SourceModel) classpathModel: SourceModel,
         @inject(ContextMenuRenderer) readonly contextMenuRenderer: ContextMenuRenderer,
         @inject(LanguageClientProvider) protected readonly languageClientProvider: LanguageClientProvider,
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
         @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-        @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[],
         @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
     ) {
-        super(props, classpathTreeModel, contextMenuRenderer);
+        super(props, classpathModel, contextMenuRenderer);
         this.addClass('classpath-widget');
-        this.activeClasspathModel = classpathModels[0];
-        this.classpathTreeModel = classpathTreeModel;
+        this.addClass('source-widget');
+        this.classpathModel = classpathModel;
+        this.setUpRoot();
     }
 
-    async createClassPathTree() {
+    private setUpRoot() {
         const rootNode = {
-            id: 'class-path-root',
-            name: 'Java class path',
+            id: 'build-path-root',
+            name: 'Java build path',
             visible: false,
             parent: undefined
-        } as CompositeTreeNode;
+        } as TreeNode;
         this.model.root = rootNode;
     }
-
+    
+    protected renderTree(model: TreeModel): React.ReactNode {
+        if (model.root) {
+            return <TreeWidget.View
+                ref={view => this.view = (view || undefined)}
+                width={this.node.offsetWidth * 0.8}
+                height={this.node.offsetHeight * 0.8}
+                rows={Array.from(this.rows.values())}
+                getNodeRowHeight={this.getNodeRowHeight}
+                renderNodeRow={this.renderNodeRow}
+                scrollToRow={this.scrollToRow}
+            />;
+        }
+        return null;
+    }
+    
     protected render(): React.ReactNode {
-        this.classpathModelToTree();
-        const tree = this.renderTree(this.classpathTreeModel);
+        const tree = this.renderTree(this.classpathModel);
         return (
             <div>
                 <div id="right-view-left" className={'classpath-tree-left'}>
-                    <h4>{ this.activeClasspathModel.classpathProps().title }</h4>
+                    <h4 className={'classpath-view-title'}>Source folders on build path</h4>
                     { tree }
-                </div>      
+                </div>
+                <div className={'classpath-button-right'}>
+                    <button onClick={this.openDialog.bind(this)}>Add source</button>
+                </div>    
             </div>
         );
     }
 
     protected renderIcon(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={node.icon + " file-icon java-libraries-icon" }> </div>;
+        return <div className={node.icon + " file-icon java-libraries-icon" }></div>;
     }
 
     protected renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {
@@ -88,41 +104,19 @@ export class ClasspathView extends TreeWidget {
 
     protected removeNode(node: TreeNode) {
         const classpathViewNode = node as ClasspathViewNode;
-        this.activeClasspathModel.removeClasspathNode(classpathViewNode.classpathEntry.path);
+        this.classpathModel.removeClasspathNode(classpathViewNode.classpathEntry.path);
         this.classpathContainer.removeClasspathEntry(classpathViewNode.classpathEntry);
-    }
-
-    private classpathModelToTree() {
-        const rootNode = {
-            id: 'class-path-root',
-            name: 'Java class path',
-            visible: false,
-            parent: undefined,
-            children: this.activeClasspathModel.classpathItems
-        } as CompositeTreeNode;
-        this.classpathTreeModel.root = rootNode;
-    }
-
-    isDirty(): boolean {
-        let isDirty = false;
-        this.classpathModels.forEach((classpathModel) => {
-            console.log(classpathModel);
-            if(classpathModel.isDirty){
-                isDirty = true;
-            }
-        });
-        return isDirty;
     }
 
     async openDialog() {
         const roots = await this.workspaceService.roots;
         if (roots) {
-            const result = await this.fileDialogService.show(this.activeClasspathModel.classpathProps().dialogProps);
-            // const rootUri = new URI(roots[0].uri);
-            // const name = this.labelProvider.getName(rootUri);
-            // const rootNode = DirNode.createRoot(roots[0], name, "");
-            // dialog.model.navigateTo(rootNode);
-            // const result = await dialog.open();
+            const result = await this.fileDialogService.show({
+                canSelectFiles: false,
+                canSelectFolders: true,
+                canSelectMany: false,
+                title: "Add a folder"
+            });
 
             // Make sure its all filtered or whatever and we got result
             if (result) {
@@ -131,17 +125,11 @@ export class ClasspathView extends TreeWidget {
                     entryKind: 3,
                     path: result.fileStat.uri
                 } as ClasspathEntry;
-                this.activeClasspathModel.addClasspathNodes(newClasspathItem);
+                this.classpathModel.addClasspathNodes(newClasspathItem);
                 this.classpathContainer.resolveClasspathEntries([newClasspathItem]);
                 this.update();
             }
         }
     }
 
-    async save() {
-        const roots = await this.workspaceService.roots;
-        if (roots) {
-            this.classpathContainer.updateClasspath(roots[0].uri);
-        }
-    }
 }

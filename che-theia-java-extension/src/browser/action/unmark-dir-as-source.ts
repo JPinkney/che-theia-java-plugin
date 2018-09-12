@@ -14,7 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { inject, injectable, multiInject } from "inversify";
+import { inject, injectable } from "inversify";
 import { ClasspathContainer } from "../classpath/classpath-container";
 import { CommandContribution, MenuContribution, SelectionService, CommandRegistry, MenuModelRegistry, Command } from "@theia/core";
 import { UriAwareCommandHandler, UriCommandHandler } from "@theia/core/lib/common/uri-command-handler";
@@ -23,8 +23,8 @@ import { CompositeTreeNode, WidgetManager } from "@theia/core/lib/browser";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { FileNavigatorWidget, FILE_NAVIGATOR_ID } from "@theia/navigator/lib/browser/navigator-widget";
 import { JavaUtils } from "../java-utils";
-import { IClasspathModel } from "../classpath/pages/classpath-model";
 import { MARKSOURCEDIR } from "./mark-dir-as-source";
+import { SourceView } from "../classpath/pages/source/source-view";
 
 export const UNMARKSOURCEDIR: Command = {
     id: 'java:unmark-source-dir',
@@ -38,7 +38,8 @@ export class UnmarkDirAsSourceAction implements CommandContribution, MenuContrib
                 @inject(SelectionService) protected readonly selectionService: SelectionService,
                 @inject(WidgetManager) protected readonly widgetManager: WidgetManager,
                 @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
-                @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[]) {
+                @inject(SourceView) protected readonly sourceView: SourceView
+                ) {
     }
 
     async performAction(projectURI: string, treeNodeID: string) {
@@ -48,7 +49,7 @@ export class UnmarkDirAsSourceAction implements CommandContribution, MenuContrib
         const filteredClasspathItems = classpathItems.filter(item => item.path !== realID);
         this.classpathContainer.resolveClasspathEntries(filteredClasspathItems);
         this.classpathContainer.updateClasspath(projectURI);
-        this.classpathModels[1].removeClasspathNode(realID);
+        this.sourceView.classpathModel.removeClasspathNode(realID);
     }
 
     registerCommands(commands: CommandRegistry): void {

@@ -1,32 +1,19 @@
 import { ClasspathEntry, ClasspathEntryKind } from "../../classpath-container";
-import { LabelProvider } from "@theia/core/lib/browser";
+import { LabelProvider, TreeModelImpl, CompositeTreeNode } from "@theia/core/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { injectable, inject } from "inversify";
-import { ClasspathModelProps, IClasspathModel } from "../classpath-model";
-import { ClasspathViewNode } from "../../node/classpath-node";
+import { IClasspathModel } from "../classpath-model";
+import { ClasspathViewNode } from "../../nodes/classpath-node";
 
  @injectable()
- export class SourceModel implements IClasspathModel {
+ export class SourceModel extends TreeModelImpl implements IClasspathModel {
 
     isDirty = false;
 
     private currentClasspathItems: Map<string, ClasspathViewNode> = new Map();
 
     constructor(@inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
-        
-    }
-
-    classpathProps(): ClasspathModelProps {
-        return {
-            buttonText: "Add folder",
-            title: "This is the library or whatever",
-            dialogProps: {
-                canSelectFiles: false,
-                canSelectFolders: true,
-                canSelectMany: false,
-                title: "Add a folder"
-            }
-        }
+        super();
     }
     
     addClasspathNodes(classpathEntry: ClasspathEntry[] | ClasspathEntry) {
@@ -47,12 +34,13 @@ import { ClasspathViewNode } from "../../node/classpath-node";
                 this.currentClasspathItems.set(classpathEntry.path, classpathViewNode);
             }    
         }
+        this.updateTree();
     }
 
     createClasspathNode(result: ClasspathEntry) {
         const resultNode = {
             id: result.path,
-            name: this.labelProvider.getName(new URI(result.path)),
+            name: this.labelProvider.getLongName(new URI(result.path)),
             icon: "java-source-folder-icon",
             parent: undefined,
             classpathEntry: result
@@ -64,10 +52,23 @@ import { ClasspathViewNode } from "../../node/classpath-node";
     removeClasspathNode(path: string): void {
         this.isDirty = true;
         this.currentClasspathItems.delete(path);
+        this.updateTree();
     }
 
     get classpathItems(): ClasspathViewNode[] {
         return Array.from(this.currentClasspathItems.values());
     }
+
+    private updateTree() {
+        const rootNode = {
+            id: 'class-path-root',
+            name: 'Java class path',
+            visible: false,
+            parent: undefined,
+            children: this.classpathItems
+        } as CompositeTreeNode;
+        this.root = rootNode;
+    }
+
 
  }

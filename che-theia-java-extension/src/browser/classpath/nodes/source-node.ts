@@ -14,15 +14,25 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
-import { ClasspathEntry } from "../classpath-container";
-import { TreeModelImpl } from "@theia/core/lib/browser";
-import { ClasspathViewNode } from "../nodes/classpath-node";
+import { injectable, inject } from "inversify";
+import { CompositeTreeNode, TreeWidget } from "@theia/core/lib/browser";
+import { SourceView } from "../pages/source/source-view";
+import { IClasspathNode } from "./classpath-node";
 
-export const IClasspathModel = Symbol('IClasspathModel');
+@injectable()
+export class SourceNode implements IClasspathNode {
+    
+    selected: boolean;
+    widget: TreeWidget;
+    id: string;
+    name: string;
+    parent: CompositeTreeNode | undefined;
 
-export interface IClasspathModel extends TreeModelImpl {
-    classpathItems: ClasspathViewNode[];
-    addClasspathNodes(classpathItems: ClasspathEntry[] | ClasspathEntry): void;
-    removeClasspathNode(path: string): void;
-    isDirty: boolean;
+    constructor(@inject(SourceView) protected readonly sourceView: SourceView) {
+        this.selected = false;
+        this.id = "Source node";
+        this.name = this.id;
+        this.widget = sourceView;
+    }
+
 }

@@ -1,35 +1,19 @@
 import { ClasspathEntry, ClasspathEntryKind } from "../../classpath-container";
-import { LabelProvider } from "@theia/core/lib/browser";
+import { LabelProvider, TreeModelImpl, CompositeTreeNode } from "@theia/core/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { injectable, inject } from "inversify";
-import { ClasspathModelProps } from "../classpath-model";
-import { ClasspathViewNode } from "../../node/classpath-node";
+import { IClasspathModel } from "../classpath-model";
+import { ClasspathViewNode } from "../../nodes/classpath-node";
 
 @injectable()
-export class LibraryModel {
+export class LibraryModel extends TreeModelImpl implements IClasspathModel {
 
     isDirty = false;
 
     private currentClasspathItems: Map<string, ClasspathViewNode> = new Map();
 
     constructor(@inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
-
-    }
-
-    classpathProps(): ClasspathModelProps {
-        return {
-            buttonText: "Add jar",
-            dialogProps: {
-                canSelectFiles: true,
-                canSelectFolders: false,
-                canSelectMany: false,
-                title: "Add a jar",
-                filters: {
-                    "jars": ["jar"]
-                }
-            },
-            title: "This is the library or whatever"
-        }
+        super();
     }
 
     addClasspathNodes(classpathEntry: ClasspathEntry[] | ClasspathEntry) {
@@ -49,14 +33,15 @@ export class LibraryModel {
                 this.currentClasspathItems.set(classpathEntry.path, classpathNode);
             }
         }
+        this.updateTree();
     }
 
-    createClasspathNodes(result: ClasspathEntry) {
+    private createClasspathNodes(result: ClasspathEntry) {
         let childNodes = [];
         for (const child of result.children) {
             const childNode = {
                 id: child.path,
-                name: this.labelProvider.getName(new URI(child.path)) + " - " + child.path,
+                name: this.labelProvider.getLongName(new URI(child.path)) + " - " + child.path,
                 icon: "java-jar-icon",
                 classpathEntry: child
             } as ClasspathViewNode;
@@ -65,7 +50,7 @@ export class LibraryModel {
 
         const resultNode = {
             id: result.path,
-            name: this.labelProvider.getName(new URI(result.path)),
+            name: this.labelProvider.getLongName(new URI(result.path)),
             icon: "java-externalLibraries-icon",
             children: childNodes,
             parent: undefined,
@@ -75,13 +60,25 @@ export class LibraryModel {
         return resultNode;
     }
 
-    removeClasspathNode(classpathViewNode: ClasspathViewNode): void {
+    removeClasspathNode(path: string): void {
         this.isDirty = true;
-        this.currentClasspathItems.delete(classpathViewNode.classpathEntry.path);
+        this.currentClasspathItems.delete(path);
+        this.updateTree();
     }
 
     get classpathItems(): ClasspathViewNode[] {
         return Array.from(this.currentClasspathItems.values());
+    }
+
+    private updateTree() {
+        const rootNode = {
+            id: 'class-path-root',
+            name: 'Java class path',
+            visible: false,
+            parent: undefined,
+            children: this.classpathItems
+        } as CompositeTreeNode;
+        this.root = rootNode;
     }
 
 }

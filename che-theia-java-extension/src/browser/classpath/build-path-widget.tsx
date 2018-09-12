@@ -15,19 +15,22 @@
  ********************************************************************************/
 
 import { injectable, inject, multiInject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, LabelProvider } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, TreeModel, TreeWidget, CompositeTreeNode, LabelProvider, Widget, WidgetManager } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
-import { ClasspathNode } from './node/classpath-node';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
-import { ClasspathView } from './classpath-view';
 import { ClasspathContainer } from './classpath-container';
 import { IClasspathModel } from './pages/classpath-model';
+import { IClasspathNode } from './nodes/classpath-node';
+import { LibraryView } from './pages/library/library-view';
+import { FILE_NAVIGATOR_ID, FileNavigatorWidget } from '@theia/navigator/lib/browser/navigator-widget';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
  */
 @injectable()
 export class BuildPathTreeWidget extends TreeWidget {
+
+    activeWidget: Widget | undefined;
 
     constructor(
         @inject(TreeProps) readonly props: TreeProps,
@@ -37,15 +40,25 @@ export class BuildPathTreeWidget extends TreeWidget {
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
         @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-        @inject(ClasspathView) protected readonly classpathTreeWidget: ClasspathView,
-        @multiInject(IClasspathModel) protected readonly classpathModels: IClasspathModel[]
+        @multiInject(IClasspathNode) readonly classpathNodes: IClasspathNode[],
+        @inject(LibraryView) protected readonly libraryView: LibraryView,
+        @inject(WidgetManager) protected readonly widgetManager: WidgetManager
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
         this.model.onSelectionChanged(async e => {
-            const clickedNode = e[0] as ClasspathNode;
-            clickedNode.onSelect();
-            this.update();
+            const clickedNode = e[0] as IClasspathNode;
+            const p = document.getElementById("classpath-panel-right");
+            if (p) {
+                if (this.activeWidget) {
+                    Widget.detach(this.activeWidget);
+                }
+               
+                Widget.attach(clickedNode.widget, p);
+                clickedNode.widget.update();
+                this.activeWidget = clickedNode.widget;
+                this.update();
+            }
         });
     }
 
@@ -60,51 +73,56 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.model.root = rootNode;
     }
 
-    async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<ClasspathNode[]> {
+    async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<IClasspathNode[]> {
         const roots = await this.workspaceService.roots;
-        if (roots) {
-            const classpathNodes = await this.classpathContainer.getClassPathEntries(roots[0].uri);         
-
+        const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
+        if (roots && fileModel) {
+            const selectedNodes = fileModel.model.selectedFileStatNodes;
+            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].uri.toString() : roots[0].uri;
+            const classpathNodes = await this.classpathContainer.getClassPathEntries(classpathURI);         
             this.classpathContainer.resolveClasspathEntries(classpathNodes);
-            const libraryNode = this.createLibraryNode(parent, classpathNodes);
-            const sourceNode = this.createSourceNode(parent, classpathNodes);
+            for (const classpathNode of this.classpathNodes) {
+                const c = classpathNode.widget.model as IClasspathModel;
+                c.addClasspathNodes(classpathNodes);
+            }
             this.classpathContainer.onClasspathModelChangeEmitter.fire({
                 classpathItems: classpathNodes,
                 uri: roots[0].uri
             });
-            return [libraryNode, sourceNode];
+            return this.classpathNodes;
         }
         return [];
     }
 
-    private createLibraryNode(parent: Readonly<CompositeTreeNode>, classpathNodes: any[]) {
-        this.classpathModels[0].addClasspathNodes(classpathNodes);
-        const libraryNode = {
-            id: "Library",
-            name: "Library",
-            selected: true,
-            icon: "",
-            parent: parent,
-            onSelect: () => {
-                this.classpathTreeWidget.activeClasspathModel = this.classpathModels[0];
+    isDirty(): boolean {
+        for (const c of this.classpathNodes) {
+            const model = c.widget.model as IClasspathModel;
+            if (model.isDirty) {
+                return true;
             }
-        } as ClasspathNode;
-        return libraryNode;
+        }
+        return false;
     }
 
-    private createSourceNode(parent: Readonly<CompositeTreeNode>, classpathNodes: any[]) {
-        this.classpathModels[1].addClasspathNodes(classpathNodes);
-        const sourceNode = {
-            id: "Source",
-            name: "Source",
-            selected: false,
-            icon: "",
-            parent: parent,
-            onSelect: () => {
-                this.classpathTreeWidget.activeClasspathModel = this.classpathModels[1];
-            }
-        } as ClasspathNode;
-        return sourceNode;
+    async save() {
+        const roots = await this.workspaceService.roots;
+        const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
+        if (roots && fileModel) {
+            const selectedNodes = fileModel.model.selectedFileStatNodes;
+            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].uri.toString() : roots[0].uri;
+            this.classpathContainer.updateClasspath(classpathURI);
+        }
+        this.resetState();
+    }
+
+    /**
+     * Called when the dialog is closed and we reset the model
+     */
+    resetState(): void {
+        for (const c of this.classpathNodes) {
+            const model = c.widget.model as IClasspathModel;
+            model.isDirty = false;
+        }
     }
 
 }

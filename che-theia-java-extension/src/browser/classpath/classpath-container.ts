@@ -134,13 +134,9 @@ export class ClasspathContainer  {
     }
 
     private async update(projectURI: string, classpathEntries: ClasspathEntry[]) {
-        console.log("Inside update");
-        console.log(projectURI);
-        console.log(classpathEntries);
         const javaClient = await this.languageClientProvider.getLanguageClient("java");
         if (javaClient) {
-            console.log("Sending request");
-            const result = await javaClient.sendRequest(ExecuteCommandRequest.type, {
+            javaClient.sendRequest(ExecuteCommandRequest.type, {
                 command: UPDATE_PROJECT_CLASSPATH,
                 arguments: [
                     {
@@ -149,8 +145,7 @@ export class ClasspathContainer  {
                     }
                 ]
             });
-            console.log(result);
-            console.log("Finished request");
+            this.clearClasspathEntries();
         }
     }
     
@@ -160,8 +155,6 @@ export class ClasspathContainer  {
      */
     async getClassPathEntries(projectPath: string): Promise<ClasspathEntry[]> {
         if (this.classpath.has(projectPath)) {
-            console.log("getting from classpath");
-            console.log(this.classpath.get(projectPath));
             return this.classpath.get(projectPath) || [];
         } else {
             const javaClient = await this.languageClientProvider.getLanguageClient("java");

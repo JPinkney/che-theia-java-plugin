@@ -42,3 +42,18 @@
 .classpath-button-done {
     margin-top: calc(var(--theia-ui-padding)*2);
 }
+
+.classpath-view-title {
+    margin-left: calc(var(--theia-ui-padding)*3);
+}
+
+.source-widget .theia-TreeNode:hover .java-remove-node-icon {
+    display: block;
+}
+
+.dialogOverlay .classpath-widget :focus {
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+

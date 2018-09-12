@@ -15,11 +15,11 @@
  ********************************************************************************/
 
 import { injectable, inject } from "inversify";
-import { AbstractDialog, Message, Widget, LabelProvider, ConfirmDialog } from "@theia/core/lib/browser";
+import { AbstractDialog, Message, Widget, LabelProvider, SelectableTreeNode, ConfirmDialog } from "@theia/core/lib/browser";
 import { Disposable } from "@theia/core";
 import { BuildPathTreeWidget } from "./build-path-widget";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
-import { ClasspathView } from "./classpath-view";
+import { LibraryView } from "./pages/library/library-view";
 
 @injectable()
 export class DialogProps {
@@ -36,7 +36,7 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
                 @inject(BuildPathTreeWidget) protected readonly buildPathTreeWidget: BuildPathTreeWidget,
                 @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
                 @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-                @inject(ClasspathView) protected readonly classpathTreeWidget: ClasspathView) {
+                @inject(LibraryView) protected readonly libraryView: LibraryView) {
         super(props);
 
         if (this.contentNode.parentElement) {
@@ -50,6 +50,7 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         this.rightPanel = document.createElement('div');
         this.rightPanel.classList.add('classpath-panel');
         this.rightPanel.classList.add('classpath-panel-right');
+        this.rightPanel.id = "classpath-panel-right";
 
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');
@@ -60,13 +61,13 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         const button = this.createButton('Done');
         button.classList.add('classpath-button-done');
         button.onclick = () => {
-            this.classpathTreeWidget.save();
+            this.buildPathTreeWidget.save();
             this.close();
         };
         this.controlPanel.appendChild(button);
 
         this.closeCrossNode.onclick = async () => {
-            if (this.classpathTreeWidget.isDirty()) {
+            if (this.buildPathTreeWidget.isDirty()) {
                 //Confirm dialog
                 const dialog = new ConfirmDialog({
                     title: `The classpath has been modified`,
@@ -74,7 +75,7 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
                     ok: 'Yes',
                     cancel: 'No'
                 });
-                await dialog.open() ? this.classpathTreeWidget.save() : false;
+                await dialog.open() ? this.buildPathTreeWidget.save() : false;
             } else {
                 this.close();
             }
@@ -84,11 +85,21 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
     protected onAfterAttach(msg: Message): void {
         super.onAfterAttach(msg);
         Widget.attach(this.buildPathTreeWidget, this.leftPanel);
-        Widget.attach(this.classpathTreeWidget, this.rightPanel);
         this.toDisposeOnDetach.push(Disposable.create(() => {
             Widget.detach(this.buildPathTreeWidget);
-            Widget.detach(this.classpathTreeWidget);
+            if (this.buildPathTreeWidget.activeWidget) {
+                Widget.detach(this.buildPathTreeWidget.activeWidget);
+                this.resetSelectedItems();
+            }
         }));
+    }
+
+    private resetSelectedItems() {
+        for (const classpathNode of this.buildPathTreeWidget.classpathNodes) {
+            classpathNode.selected = false;
+        }
+        const x = this.buildPathTreeWidget.model.getNode("Library node") as SelectableTreeNode;
+        x.selected = true;
     }
 
     protected onUpdateRequest(msg: Message): void {
@@ -99,7 +110,8 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
     protected onActivateRequest(msg: Message): void {
         super.onActivateRequest(msg);
         this.buildPathTreeWidget.createBuildPathTree();
-        this.classpathTreeWidget.createClassPathTree();
+        Widget.attach(this.libraryView, this.rightPanel);
+        this.buildPathTreeWidget.activeWidget = this.libraryView;
     }
 
 }
