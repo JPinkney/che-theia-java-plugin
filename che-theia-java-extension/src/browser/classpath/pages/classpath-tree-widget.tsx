@@ -86,9 +86,7 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
 
     protected renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {
         const c = node as ClasspathViewNode;
-        console.log(c);
-        if (c.isRemoveable) {
-            console.log("HIT");
+        if ((c.parent && c.parent.id === "class-path-root" && c.classpathEntry.entryKind === ClasspathEntryKind.LIBRARY) || c.classpathEntry.entryKind === ClasspathEntryKind.SOURCE) {
             return <div className={"java-remove-node-icon file-icon java-libraries-icon"} onClick={() => this.removeNode(node)}></div>;
         }
         return super.renderTailDecorations(node, props);
@@ -102,7 +100,7 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
     
     async openDialog() {
         if (this.activeFileStat) {
-            const rootNode = DirNode.createRoot(this.activeFileStat, this.activeFileStat.uri, this.activeFileStat.uri);
+            const rootNode = DirNode.createRoot(this.activeFileStat, this.labelProvider.getName(this.activeFileStat), this.activeFileStat.uri);
             const title = this.fileDialogProps.title;
             const dialog = this.openFileDialogFactory(Object.assign(this.fileDialogProps, { title }));
             dialog.model.navigateTo(rootNode);
