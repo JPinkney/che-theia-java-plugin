@@ -23,41 +23,60 @@ export class LibraryModel extends TreeModelImpl implements IClasspathModel {
                     continue;
                 }
     
-                const classpathNode = this.createClasspathNodes(result);
+                const classpathNode = this.createClasspathNodes(result, false);
                 this.currentClasspathItems.set(result.path, classpathNode);
             }
         } else {
             this.isDirty = true;
             if (classpathEntry.entryKind === ClasspathEntryKind.CONTAINER || classpathEntry.entryKind === ClasspathEntryKind.LIBRARY) {
-                const classpathNode = this.createClasspathNodes(classpathEntry);
+                const classpathNode = this.createClasspathNodes(classpathEntry, true);
                 this.currentClasspathItems.set(classpathEntry.path, classpathNode);
             }
         }
         this.updateTree();
     }
 
-    private createClasspathNodes(result: ClasspathEntry) {
+    private createClasspathNodes(result: ClasspathEntry, isRemoveable: boolean) {
         let childNodes = [];
-        for (const child of result.children) {
-            const childNode = {
-                id: child.path,
-                name: this.labelProvider.getLongName(new URI(child.path)) + " - " + child.path,
-                icon: "java-jar-icon",
-                classpathEntry: child
-            } as ClasspathViewNode;
-            childNodes.push(childNode);
+        if (result.children) {
+            for (const child of result.children) {
+                const childNode = {
+                    id: child.path,
+                    name: this.labelProvider.getName(new URI(child.path)) + " - " + child.path,
+                    icon: "java-jar-icon",
+                    classpathEntry: child,
+                    isRemoveable: false
+                } as ClasspathViewNode;
+                childNodes.push(childNode);
+            }
         }
-
-        const resultNode = {
-            id: result.path,
-            name: this.labelProvider.getLongName(new URI(result.path)),
-            icon: "java-externalLibraries-icon",
-            children: childNodes,
-            parent: undefined,
-            expanded: false,
-            classpathEntry: result
-        } as ClasspathViewNode;
-        return resultNode;
+    
+        if (childNodes.length > 0) {
+            const resultNode = {
+                id: result.path,
+                name: this.labelProvider.getName(new URI(result.path)),
+                icon: "java-externalLibraries-icon",
+                children: childNodes,
+                parent: undefined,
+                expanded: false,
+                classpathEntry: result,
+                isRemoveable: isRemoveable
+            } as ClasspathViewNode;
+            return resultNode;
+        } else {
+            const resultNode = {
+                id: result.path,
+                name: this.labelProvider.getName(new URI(result.path)),
+                icon: "java-externalLibraries-icon",
+                parent: undefined,
+                expanded: false,
+                classpathEntry: result,
+                isRemoveable: isRemoveable
+            } as ClasspathViewNode;
+            return resultNode;
+        }
+        
+        
     }
 
     removeClasspathNode(path: string): void {

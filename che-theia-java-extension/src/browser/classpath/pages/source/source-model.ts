@@ -43,7 +43,8 @@ import { ClasspathViewNode } from "../../nodes/classpath-node";
             name: this.labelProvider.getLongName(new URI(result.path)),
             icon: "java-source-folder-icon",
             parent: undefined,
-            classpathEntry: result
+            classpathEntry: result,
+            isRemoveable: true
         } as ClasspathViewNode;
         
         return resultNode;

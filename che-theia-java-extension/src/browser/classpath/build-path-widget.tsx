@@ -23,6 +23,7 @@ import { IClasspathModel } from './pages/classpath-model';
 import { IClasspathNode } from './nodes/classpath-node';
 import { LibraryView } from './pages/library/library-view';
 import { FILE_NAVIGATOR_ID, FileNavigatorWidget } from '@theia/navigator/lib/browser/navigator-widget';
+import { AbstractClasspathTreeWidget } from './pages/classpath-tree-widget';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
@@ -78,11 +79,13 @@ export class BuildPathTreeWidget extends TreeWidget {
         const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
         if (roots && fileModel) {
             const selectedNodes = fileModel.model.selectedFileStatNodes;
-            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].uri.toString() : roots[0].uri;
-            const classpathNodes = await this.classpathContainer.getClassPathEntries(classpathURI);         
+            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].fileStat : roots[0];
+            const classpathNodes = await this.classpathContainer.getClassPathEntries(classpathURI.uri.toString());         
             this.classpathContainer.resolveClasspathEntries(classpathNodes);
             for (const classpathNode of this.classpathNodes) {
-                const c = classpathNode.widget.model as IClasspathModel;
+                const classpathWidget = classpathNode.widget as AbstractClasspathTreeWidget;
+                classpathWidget.activeFileStat = classpathURI;
+                const c = classpathWidget.model as IClasspathModel;
                 c.addClasspathNodes(classpathNodes);
             }
             this.classpathContainer.onClasspathModelChangeEmitter.fire({

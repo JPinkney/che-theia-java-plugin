@@ -16,6 +16,10 @@ export class JavaUtils {
         return undefined;
     }
 
+    static uriToTreeNodeID(uri: string) {
+        return uri.replace(this.FILE, "");
+    }
+
     static getIDFromMultiRootID(multiRootID: string) {
         const fixed = multiRootID.split(":");
         const uri = fixed[1];

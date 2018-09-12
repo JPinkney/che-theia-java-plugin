@@ -15,25 +15,20 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, LabelProvider, TreeNode, NodeProps, TreeWidget, TreeModel } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, LabelProvider, TreeNode, CompositeTreeNode } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import * as React from 'react';
-import { FileDialogService } from '@theia/filesystem/lib/browser';
-import { ClasspathContainer, ClasspathEntry } from '../../classpath-container';
+import { FileDialogService, OpenFileDialogFactory } from '@theia/filesystem/lib/browser';
+import { ClasspathContainer, ClasspathEntryKind } from '../../classpath-container';
 import { SourceModel } from './source-model';
-import { ClasspathViewNode } from '../../nodes/classpath-node';
-
-export interface ClasspathListNode {
-    id: string,
-    name: string
-}
+import { AbstractClasspathTreeWidget } from '../classpath-tree-widget';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
  */
 @injectable()
-export class SourceView extends TreeWidget {
+export class SourceView extends AbstractClasspathTreeWidget {
 
     classpathModel: SourceModel;
 
@@ -45,38 +40,20 @@ export class SourceView extends TreeWidget {
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
         @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-        @inject(FileDialogService) protected readonly fileDialogService: FileDialogService
+        @inject(FileDialogService) protected readonly fileDialogService: FileDialogService,
+        @inject(OpenFileDialogFactory) protected readonly openFileDialogFactory: OpenFileDialogFactory
     ) {
-        super(props, classpathModel, contextMenuRenderer);
+        super(props, classpathModel, contextMenuRenderer, languageClientProvider, workspaceService, classpathContainer, labelProvider, openFileDialogFactory);
         this.addClass('classpath-widget');
         this.addClass('source-widget');
         this.classpathModel = classpathModel;
-        this.setUpRoot();
-    }
-
-    private setUpRoot() {
-        const rootNode = {
-            id: 'build-path-root',
-            name: 'Java build path',
-            visible: false,
-            parent: undefined
-        } as TreeNode;
-        this.model.root = rootNode;
-    }
-    
-    protected renderTree(model: TreeModel): React.ReactNode {
-        if (model.root) {
-            return <TreeWidget.View
-                ref={view => this.view = (view || undefined)}
-                width={this.node.offsetWidth * 0.8}
-                height={this.node.offsetHeight * 0.8}
-                rows={Array.from(this.rows.values())}
-                getNodeRowHeight={this.getNodeRowHeight}
-                renderNodeRow={this.renderNodeRow}
-                scrollToRow={this.scrollToRow}
-            />;
+        this.fileDialogProps = {
+            canSelectFiles: false,
+            canSelectFolders: true,
+            canSelectMany: false,
+            title: "Add a source folder",
+            entryKindOnAdded: ClasspathEntryKind.SOURCE
         }
-        return null;
     }
     
     protected render(): React.ReactNode {
@@ -94,42 +71,8 @@ export class SourceView extends TreeWidget {
         );
     }
 
-    protected renderIcon(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={node.icon + " file-icon java-libraries-icon" }></div>;
-    }
-
-    protected renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={"java-remove-node-icon file-icon java-libraries-icon"} onClick={() => this.removeNode(node)}></div>;
-    }
-
-    protected removeNode(node: TreeNode) {
-        const classpathViewNode = node as ClasspathViewNode;
-        this.classpathModel.removeClasspathNode(classpathViewNode.classpathEntry.path);
-        this.classpathContainer.removeClasspathEntry(classpathViewNode.classpathEntry);
-    }
-
-    async openDialog() {
-        const roots = await this.workspaceService.roots;
-        if (roots) {
-            const result = await this.fileDialogService.show({
-                canSelectFiles: false,
-                canSelectFolders: true,
-                canSelectMany: false,
-                title: "Add a folder"
-            });
-
-            // Make sure its all filtered or whatever and we got result
-            if (result) {
-                const newClasspathItem = {
-                    children: [],
-                    entryKind: 3,
-                    path: result.fileStat.uri
-                } as ClasspathEntry;
-                this.classpathModel.addClasspathNodes(newClasspathItem);
-                this.classpathContainer.resolveClasspathEntries([newClasspathItem]);
-                this.update();
-            }
-        }
+    protected isValidOpenedNode(node: TreeNode): boolean {
+        return (node as CompositeTreeNode).children !== undefined;
     }
 
 }

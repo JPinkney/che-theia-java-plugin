@@ -15,26 +15,20 @@
  ********************************************************************************/
 
 import { injectable, inject } from 'inversify';
-import { ContextMenuRenderer, TreeProps, LabelProvider, TreeWidget, TreeNode, NodeProps, TreeModel, WidgetManager } from '@theia/core/lib/browser';
+import { ContextMenuRenderer, TreeProps, LabelProvider, TreeNode } from '@theia/core/lib/browser';
 import { LanguageClientProvider } from '@theia/languages/lib/browser/language-client-provider';
 import { WorkspaceService } from '@theia/workspace/lib/browser';
 import * as React from 'react';
-import { FileDialogService, FileStatNode } from '@theia/filesystem/lib/browser';
-import { ClasspathContainer, ClasspathEntry } from '../../classpath-container';
+import { OpenFileDialogFactory } from '@theia/filesystem/lib/browser';
+import { ClasspathContainer, ClasspathEntryKind } from '../../classpath-container';
 import { LibraryModel } from './library-model';
-import { FILE_NAVIGATOR_ID, FileNavigatorWidget } from '@theia/navigator/lib/browser/navigator-widget';
-import { JavaUtils } from '../../../java-utils';
-
-export interface ClasspathListNode {
-    id: string,
-    name: string
-}
+import { AbstractClasspathTreeWidget } from '../classpath-tree-widget';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
  */
 @injectable()
-export class LibraryView extends TreeWidget {
+export class LibraryView extends AbstractClasspathTreeWidget {
 
     classpathModel: LibraryModel;
 
@@ -46,38 +40,18 @@ export class LibraryView extends TreeWidget {
         @inject(WorkspaceService) protected readonly workspaceService: WorkspaceService,
         @inject(ClasspathContainer) protected readonly classpathContainer: ClasspathContainer,
         @inject(LabelProvider) protected readonly labelProvider: LabelProvider,
-        @inject(FileDialogService) protected readonly fileDialogService: FileDialogService,
-        @inject(WidgetManager) protected readonly widgetManager: WidgetManager
+        @inject(OpenFileDialogFactory) protected readonly openFileDialogFactory: OpenFileDialogFactory
     ) {
-        super(props, classpathModel, contextMenuRenderer);
-        this.addClass('classpath-widget');
+        super(props, classpathModel, contextMenuRenderer, languageClientProvider, workspaceService, classpathContainer, labelProvider, openFileDialogFactory);
         this.classpathModel = classpathModel;
-        this.setUpRoot();
-    }
-
-    private setUpRoot() {
-        const rootNode = {
-            id: 'build-path-root',
-            name: 'Java build path',
-            visible: true,
-            parent: undefined
-        } as TreeNode;
-        this.model.root = rootNode;
-    }
-    
-    protected renderTree(model: TreeModel): React.ReactNode {
-        if (model.root) {
-            return <TreeWidget.View
-                ref={view => this.view = (view || undefined)}
-                width={this.node.offsetWidth * 0.8}
-                height={this.node.offsetHeight * 0.8}
-                rows={Array.from(this.rows.values())}
-                getNodeRowHeight={this.getNodeRowHeight}
-                renderNodeRow={this.renderNodeRow}
-                scrollToRow={this.scrollToRow}
-            />;
+        this.addClass('library-widget');
+        this.fileDialogProps = {
+            canSelectFiles: true,
+            canSelectFolders: false,
+            canSelectMany: false,
+            title: "Add a jar",
+            entryKindOnAdded: ClasspathEntryKind.LIBRARY
         }
-        return null;
     }
     
     protected render(): React.ReactNode {
@@ -95,50 +69,8 @@ export class LibraryView extends TreeWidget {
         );
     }
 
-    protected renderIcon(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={node.icon + " file-icon java-libraries-icon" }></div>;
+    protected isValidOpenedNode(node: TreeNode): boolean {
+        return node.id.endsWith('.jar');
     }
-
-    async openDialog() {
-        const roots = await this.workspaceService.roots;
-        const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
-        if (roots && fileModel) {
-            const selectedNodes = fileModel.model.selectedFileStatNodes;
-            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].uri.toString() : roots[0].uri;
-            const actualURI = JavaUtils.getRootProjectURI(roots, classpathURI);
-            if (actualURI) {
-                const multiRootActualURI = JavaUtils.getMultiRootReadyURI(actualURI, actualURI);
-                console.log("Multi root uri");
-                console.log(multiRootActualURI);
-                const fileStatNode = fileModel.model.getNode(multiRootActualURI) as FileStatNode;
-            if (fileStatNode) {
-                const fileStat = fileStatNode.fileStat;
-                const result = await this.fileDialogService.show({
-                    canSelectFiles: false,
-                    canSelectFolders: true,
-                    canSelectMany: false,
-                    filters: {
-                        "jars": ["jar"]
-                    },
-                    title: "Add a jar"
-                }, fileStat);
     
-                // Make sure its all filtered or whatever and we got result
-                if (result && result.uri.toString().endsWith('.jar')) {
-                    const newClasspathItem = {
-                        children: [],
-                        entryKind: 3,
-                        path: result.fileStat.uri
-                    } as ClasspathEntry;
-                    this.classpathModel.addClasspathNodes(newClasspathItem);
-                    this.classpathContainer.resolveClasspathEntries([newClasspathItem]);
-                    this.update();
-                }
-            }
-            }
-            
-        }
-        
-    }
-
 }

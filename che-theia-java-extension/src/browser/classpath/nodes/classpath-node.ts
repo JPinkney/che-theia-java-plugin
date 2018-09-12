@@ -25,4 +25,5 @@ export interface IClasspathNode extends SelectableTreeNode {
 
 export interface ClasspathViewNode extends TreeNode {
     classpathEntry: ClasspathEntry;
+    isRemoveable: boolean;
 }
