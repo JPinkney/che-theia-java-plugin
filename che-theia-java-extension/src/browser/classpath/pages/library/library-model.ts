@@ -1,16 +1,12 @@
 import { ClasspathEntry, ClasspathEntryKind } from "../../classpath-container";
-import { LabelProvider, TreeModelImpl, CompositeTreeNode } from "@theia/core/lib/browser";
+import { LabelProvider } from "@theia/core/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { injectable, inject } from "inversify";
-import { IClasspathModel } from "../classpath-model";
+import { AbstractClasspathModel } from "../classpath-model";
 import { ClasspathViewNode } from "../../nodes/classpath-node";
 
 @injectable()
-export class LibraryModel extends TreeModelImpl implements IClasspathModel {
-
-    isDirty = false;
-
-    private currentClasspathItems: Map<string, ClasspathViewNode> = new Map();
+export class LibraryModel extends AbstractClasspathModel {
 
     constructor(@inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
         super();
@@ -24,7 +20,7 @@ export class LibraryModel extends TreeModelImpl implements IClasspathModel {
                 }
     
                 const classpathNode = this.createClasspathNodes(result);
-                this.currentClasspathItems.set(result.path, classpathNode);
+                this.currentClasspathItems.set(result.path, classpathNode); 
             }
         } else {
             this.isDirty = true;
@@ -42,7 +38,7 @@ export class LibraryModel extends TreeModelImpl implements IClasspathModel {
             for (const child of result.children) {
                 const childNode = {
                     id: child.path,
-                    name: this.labelProvider.getName(new URI(child.path)) + " - " + child.path,
+                    name: this.labelProvider.getName(new URI(child.path)) + " - " + this.labelProvider.getLongName(new URI(child.path)),
                     icon: "java-jar-icon",
                     classpathEntry: child
                 } as ClasspathViewNode;
@@ -64,27 +60,6 @@ export class LibraryModel extends TreeModelImpl implements IClasspathModel {
         } 
 
         return resultNode;    
-    }
-
-    removeClasspathNode(path: string): void {
-        this.isDirty = true;
-        this.currentClasspathItems.delete(path);
-        this.updateTree();
-    }
-
-    get classpathItems(): ClasspathViewNode[] {
-        return Array.from(this.currentClasspathItems.values());
-    }
-
-    private updateTree() {
-        const rootNode = {
-            id: 'class-path-root',
-            name: 'Java class path',
-            visible: false,
-            parent: undefined,
-            children: this.classpathItems
-        } as CompositeTreeNode;
-        this.root = rootNode;
     }
 
 }

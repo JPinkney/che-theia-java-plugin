@@ -1,16 +1,12 @@
 import { ClasspathEntry, ClasspathEntryKind } from "../../classpath-container";
-import { LabelProvider, TreeModelImpl, CompositeTreeNode } from "@theia/core/lib/browser";
+import { LabelProvider } from "@theia/core/lib/browser";
 import URI from "@theia/core/lib/common/uri";
 import { injectable, inject } from "inversify";
-import { IClasspathModel } from "../classpath-model";
+import {  AbstractClasspathModel } from "../classpath-model";
 import { ClasspathViewNode } from "../../nodes/classpath-node";
 
  @injectable()
- export class SourceModel extends TreeModelImpl implements IClasspathModel {
-
-    isDirty = false;
-
-    private currentClasspathItems: Map<string, ClasspathViewNode> = new Map();
+ export class SourceModel extends AbstractClasspathModel {
 
     constructor(@inject(LabelProvider) protected readonly labelProvider: LabelProvider) {
         super();
@@ -49,27 +45,5 @@ import { ClasspathViewNode } from "../../nodes/classpath-node";
         
         return resultNode;
     }
-
-    removeClasspathNode(path: string): void {
-        this.isDirty = true;
-        this.currentClasspathItems.delete(path);
-        this.updateTree();
-    }
-
-    get classpathItems(): ClasspathViewNode[] {
-        return Array.from(this.currentClasspathItems.values());
-    }
-
-    private updateTree() {
-        const rootNode = {
-            id: 'class-path-root',
-            name: 'Java class path',
-            visible: false,
-            parent: undefined,
-            children: this.classpathItems
-        } as CompositeTreeNode;
-        this.root = rootNode;
-    }
-
 
  }

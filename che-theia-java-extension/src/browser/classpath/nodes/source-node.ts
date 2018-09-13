@@ -24,7 +24,7 @@ export class SourceNode implements IClasspathNode {
     
     selected: boolean;
     widget: TreeWidget;
-    id: string;
+    id: string = "Source node";
     name: string;
     parent: CompositeTreeNode | undefined;
 

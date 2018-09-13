@@ -26,6 +26,8 @@ export class DialogProps {
     readonly title: string = "";
 }
 
+export const ClasspathDialogRightPanelID = 'classpath-panel-right';
+
 @injectable()
 export abstract class ClassPathDialog extends AbstractDialog<void> {
     
@@ -50,7 +52,7 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         this.rightPanel = document.createElement('div');
         this.rightPanel.classList.add('classpath-panel');
         this.rightPanel.classList.add('classpath-panel-right');
-        this.rightPanel.id = "classpath-panel-right";
+        this.rightPanel.id = ClasspathDialogRightPanelID;
 
         this.contentNode.classList.remove('dialogContent');
         this.contentNode.classList.add('classpath-content');
@@ -68,14 +70,13 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
 
         this.closeCrossNode.onclick = async () => {
             if (this.buildPathTreeWidget.isDirty()) {
-                //Confirm dialog
                 const dialog = new ConfirmDialog({
                     title: `The classpath has been modified`,
                     msg: 'Do you want to overwrite the classpath changes?',
                     ok: 'Yes',
                     cancel: 'No'
                 });
-                await dialog.open() ? this.buildPathTreeWidget.save() : false;
+                await dialog.open() ? this.buildPathTreeWidget.save() : this.buildPathTreeWidget.resetState();
             } else {
                 this.close();
             }

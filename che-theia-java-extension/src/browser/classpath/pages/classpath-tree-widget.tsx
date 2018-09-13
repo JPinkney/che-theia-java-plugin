@@ -52,17 +52,7 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
         super(props, classpathModel, contextMenuRenderer);
         this.addClass('classpath-widget');
         this.classpathModel = classpathModel;
-        this.setUpRoot();
-    }
-    
-    private setUpRoot() {
-        const rootNode = {
-            id: 'build-path-root',
-            name: 'Java build path',
-            visible: false,
-            parent: undefined
-        } as TreeNode;
-        this.model.root = rootNode;
+        this.classpathModel.updateTree();
     }
 
     protected renderTree(model: TreeModel): React.ReactNode {
@@ -81,13 +71,13 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
     }
 
     protected renderIcon(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={node.icon + " file-icon java-libraries-icon" }></div>;
+        return <div className={node.icon + ClasspathTreeWidget.Styles.CLASSPATHTREEWIDGET_STYLE_ICONS}></div>;
     }
 
     protected renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {
         const c = node as ClasspathViewNode;
         if ((c.parent && c.parent.id === "class-path-root" && c.classpathEntry.entryKind === ClasspathEntryKind.LIBRARY) || c.classpathEntry.entryKind === ClasspathEntryKind.SOURCE) {
-            return <div className={"java-remove-node-icon file-icon java-libraries-icon"} onClick={() => this.removeNode(node)}></div>;
+            return <div className={ClasspathTreeWidget.Styles.CLASSPATHTREEWIDGET_REMOVE_ICON} onClick={() => this.removeNode(node)}></div>;
         }
         return super.renderTailDecorations(node, props);
     }
@@ -123,4 +113,11 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
         return false;
     }
               
+}
+
+export namespace ClasspathTreeWidget {
+    export namespace Styles {
+        export const CLASSPATHTREEWIDGET_STYLE_ICONS = 'file-icon java-libraries-icon';
+        export const CLASSPATHTREEWIDGET_REMOVE_ICON = 'java-remove-node-icon file-icon java-libraries-icon';
+    }
 }

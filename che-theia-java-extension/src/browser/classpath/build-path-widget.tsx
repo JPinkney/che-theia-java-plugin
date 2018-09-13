@@ -24,6 +24,9 @@ import { IClasspathNode } from './nodes/classpath-node';
 import { LibraryView } from './pages/library/library-view';
 import { FILE_NAVIGATOR_ID, FileNavigatorWidget } from '@theia/navigator/lib/browser/navigator-widget';
 import { AbstractClasspathTreeWidget } from './pages/classpath-tree-widget';
+import { JavaUtils } from '../java-utils';
+import { FileStat } from '@theia/filesystem/lib/common';
+import { ClasspathDialogRightPanelID } from './classpath-dialog';
 
 /**
  * This is the left side of the panel that holds the libraries and the source node
@@ -32,6 +35,7 @@ import { AbstractClasspathTreeWidget } from './pages/classpath-tree-widget';
 export class BuildPathTreeWidget extends TreeWidget {
 
     activeWidget: Widget | undefined;
+    activeClasspathURI: string | undefined;
 
     constructor(
         @inject(TreeProps) readonly props: TreeProps,
@@ -49,13 +53,13 @@ export class BuildPathTreeWidget extends TreeWidget {
         this.addClass('classpath-widget');
         this.model.onSelectionChanged(async e => {
             const clickedNode = e[0] as IClasspathNode;
-            const p = document.getElementById("classpath-panel-right");
-            if (p) {
+            const rightPanel = document.getElementById(ClasspathDialogRightPanelID);
+            if (rightPanel) {
                 if (this.activeWidget) {
                     Widget.detach(this.activeWidget);
                 }
                
-                Widget.attach(clickedNode.widget, p);
+                Widget.attach(clickedNode.widget, rightPanel);
                 clickedNode.widget.update();
                 this.activeWidget = clickedNode.widget;
                 this.update();
@@ -75,26 +79,42 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<IClasspathNode[]> {
+        let activeFileStat = await this.getActiveClasspathFileStat();
+        if (activeFileStat) {
+            this.activeClasspathURI = activeFileStat.uri;  
+
+            const classpathNodes = await this.classpathContainer.getClassPathEntries(activeFileStat.uri); 
+            this.classpathContainer.resolveClasspathEntries(classpathNodes);
+            for (const classpathNode of this.classpathNodes) {
+                const classpathWidget = classpathNode.widget as AbstractClasspathTreeWidget;
+                classpathWidget.activeFileStat = activeFileStat;
+                const c = classpathWidget.model as IClasspathModel;
+                c.addClasspathNodes(classpathNodes);
+            }
+
+            this.classpathContainer.onClasspathModelChangeEmitter.fire({
+                classpathItems: classpathNodes,
+                uri: activeFileStat.uri
+            });
+            return this.classpathNodes;
+        }
+        return [];
+    }
+
+    /**
+     * Get the classpath file stat for the active configure classpath session
+     */
+    async getActiveClasspathFileStat(): Promise<FileStat | undefined> {
         const roots = await this.workspaceService.roots;
         const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
         if (roots && fileModel) {
             const selectedNodes = fileModel.model.selectedFileStatNodes;
             const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].fileStat : roots[0];
-            const classpathNodes = await this.classpathContainer.getClassPathEntries(classpathURI.uri.toString());         
-            this.classpathContainer.resolveClasspathEntries(classpathNodes);
-            for (const classpathNode of this.classpathNodes) {
-                const classpathWidget = classpathNode.widget as AbstractClasspathTreeWidget;
-                classpathWidget.activeFileStat = classpathURI;
-                const c = classpathWidget.model as IClasspathModel;
-                c.addClasspathNodes(classpathNodes);
-            }
-            this.classpathContainer.onClasspathModelChangeEmitter.fire({
-                classpathItems: classpathNodes,
-                uri: roots[0].uri
-            });
-            return this.classpathNodes;
+            const classpathURI2 = JavaUtils.getRootProjectURI(roots, classpathURI.uri.toString()) as string;
+            classpathURI.uri = classpathURI2;
+            return classpathURI; 
         }
-        return [];
+        return undefined;
     }
 
     isDirty(): boolean {
@@ -108,24 +128,22 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async save() {
-        const roots = await this.workspaceService.roots;
-        const fileModel = await this.widgetManager.getWidget(FILE_NAVIGATOR_ID) as FileNavigatorWidget;
-        if (roots && fileModel) {
-            const selectedNodes = fileModel.model.selectedFileStatNodes;
-            const classpathURI = selectedNodes.length > 0 ? selectedNodes[0].uri.toString() : roots[0].uri;
-            this.classpathContainer.updateClasspath(classpathURI);
+        if (this.activeClasspathURI) {
+            this.classpathContainer.updateClasspath(this.activeClasspathURI);
         }
         this.resetState();
     }
 
     /**
-     * Called when the dialog is closed and we reset the model
+     * Called when the dialog is closed and we reset the model and items
      */
     resetState(): void {
         for (const c of this.classpathNodes) {
             const model = c.widget.model as IClasspathModel;
             model.isDirty = false;
+            model.currentClasspathItems.clear();
         }
+        this.classpathContainer.clearClasspathEntries();
     }
 
 }
