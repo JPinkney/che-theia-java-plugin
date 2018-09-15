@@ -20,6 +20,8 @@ import { ClasspathContainer, ClasspathEntryKind } from '../../classpath-containe
 import { SourceModel } from './source-model';
 import { AbstractClasspathTreeWidget } from '../classpath-tree-widget';
 
+export const SourceViewID = 'Source View Widget';
+
 @injectable()
 export class SourceView extends AbstractClasspathTreeWidget {
 
@@ -39,6 +41,7 @@ export class SourceView extends AbstractClasspathTreeWidget {
         super(props, classpathModel, contextMenuRenderer, languageClientProvider, workspaceService, classpathContainer, labelProvider, openFileDialogFactory);
         this.addClass('classpath-widget');
         this.addClass('source-widget');
+        this.id = SourceViewID;
         this.classpathModel = classpathModel;
         this.fileDialogProps = {
             canSelectFiles: false,

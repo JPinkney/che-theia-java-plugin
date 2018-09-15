@@ -23,7 +23,7 @@ import "../../src/browser/styles/icons.css";
 import "../../src/browser/styles/classpath.css";
 import { FileStructure } from './navigation/file-structure';
 import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
-import { BuildPathTreeWidget } from './classpath/build-path-widget';
+import { BuildPathTreeWidget, BuildPathTreeWidgetID } from './classpath/build-path-widget';
 import { ClassPathDialog, DialogProps } from './classpath/classpath-dialog';
 import { ClasspathContainer } from './classpath/classpath-container';
 import { SourceModel } from './classpath/pages/source/source-model';
@@ -32,8 +32,8 @@ import { ClasspathDecorator } from './classpath/classpath-tree-decorator';
 import { MarkDirAsSourceAction } from './action/mark-dir-as-source';
 import { UnmarkDirAsSourceAction } from './action/unmark-dir-as-source';
 import { NavigatorTreeDecorator } from '@theia/navigator/lib/browser/navigator-decorator-service';
-import { LibraryView } from './classpath/pages/library/library-view';
-import { SourceView } from './classpath/pages/source/source-view';
+import { LibraryView, LibraryViewID } from './classpath/pages/library/library-view';
+import { SourceView, SourceViewID } from './classpath/pages/source/source-view';
 import { IClasspathNode } from './classpath/nodes/classpath-node';
 import { LibraryNode } from './classpath/nodes/library-node';
 import { SourceNode } from './classpath/nodes/source-node';
@@ -49,6 +49,13 @@ export default new ContainerModule((bind) => {
     bind(KeybindingContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(FileStructure));
 
+    
+    bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
+
+    /**
+     * Classpath configuration
+     */
+
     bind(MarkDirAsSourceAction).toSelf().inSingletonScope();
     bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));
@@ -56,8 +63,6 @@ export default new ContainerModule((bind) => {
     bind(UnmarkDirAsSourceAction).toSelf().inSingletonScope();
     bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(UnmarkDirAsSourceAction));
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(UnmarkDirAsSourceAction));
-
-    bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
 
     bind(ClassPathDialog).toSelf().inSingletonScope();
     bind(DialogProps).toConstantValue({ title: 'Configure Classpath' });
@@ -75,7 +80,7 @@ export default new ContainerModule((bind) => {
     ).inSingletonScope();
 
     bind(WidgetFactory).toDynamicValue(context => ({
-        id: "Build path tree widget",
+        id: BuildPathTreeWidgetID,
         createWidget: () => context.container.get<BuildPathTreeWidget>(BuildPathTreeWidget)
     }));
 
@@ -87,7 +92,7 @@ export default new ContainerModule((bind) => {
     ).inSingletonScope();
 
     bind(WidgetFactory).toDynamicValue(context => ({
-        id: "Library View Widget",
+        id: LibraryViewID,
         createWidget: () => context.container.get<LibraryView>(LibraryView)
     }));
 
@@ -99,7 +104,7 @@ export default new ContainerModule((bind) => {
     ).inSingletonScope();
 
     bind(WidgetFactory).toDynamicValue(context => ({
-        id: "Source View Widget",
+        id: SourceViewID,
         createWidget: () => context.container.get<SourceView>(SourceView)
     }));
 

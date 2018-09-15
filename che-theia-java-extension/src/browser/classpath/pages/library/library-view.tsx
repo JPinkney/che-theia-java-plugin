@@ -20,6 +20,8 @@ import { ClasspathContainer, ClasspathEntryKind } from '../../classpath-containe
 import { LibraryModel } from './library-model';
 import { AbstractClasspathTreeWidget } from '../classpath-tree-widget';
 
+export const LibraryViewID = 'Library View';
+
 @injectable()
 export class LibraryView extends AbstractClasspathTreeWidget {
 
@@ -37,6 +39,7 @@ export class LibraryView extends AbstractClasspathTreeWidget {
     ) {
         super(props, classpathModel, contextMenuRenderer, languageClientProvider, workspaceService, classpathContainer, labelProvider, openFileDialogFactory);
         this.classpathModel = classpathModel;
+        this.id = LibraryViewID;
         this.addClass('library-widget');
         this.fileDialogProps = {
             canSelectFiles: true,

@@ -35,6 +35,9 @@ export interface ClasspathChangeNotification {
     uri: string;
 }
 
+/**
+ * Holds all the current classpath items for a project and updates items to che-ls-jdts
+ */
 @injectable()
 export class ClasspathContainer  {
 

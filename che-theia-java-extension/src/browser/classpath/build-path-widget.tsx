@@ -24,8 +24,10 @@ import { JavaUtils } from '../java-utils';
 import { FileStat } from '@theia/filesystem/lib/common';
 import { ClasspathDialogRightPanelID } from './classpath-dialog';
 
+export const BuildPathTreeWidgetID = 'Build path tree widget';
+
 /**
- * This is the left side of the panel that holds the libraries and the source node
+ * Left side of configure classpath that holds the libraries and the source node
  */
 @injectable()
 export class BuildPathTreeWidget extends TreeWidget {
@@ -47,6 +49,7 @@ export class BuildPathTreeWidget extends TreeWidget {
     ) {
         super(props, model, contextMenuRenderer);
         this.addClass('classpath-widget');
+        this.id = BuildPathTreeWidgetID;
         this.model.onSelectionChanged(async e => {
             const clickedNode = e[0] as IClasspathNode;
             const rightPanel = document.getElementById(ClasspathDialogRightPanelID);
@@ -75,6 +78,7 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<IClasspathNode[]> {
+        console.log("Is this hit>");
         let activeFileStat = await this.getActiveClasspathFileStat();
         if (activeFileStat) {
             this.activeClasspathURI = activeFileStat.uri;  

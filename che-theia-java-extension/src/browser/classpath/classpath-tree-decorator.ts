@@ -39,14 +39,36 @@ export class ClasspathDecorator implements TreeDecorator {
     async decorations(tree: Tree): Promise<Map<string, TreeDecoration.Data>> {
         const roots = await this.workspaceService.roots;
         if (roots) {
+            const toDecorate = new Map<string, TreeDecoration.Data>();
             for (const root of roots) {
+                console.log("Attempting to get data from " + root);
                 const classpathItems = await this.classpathContainer.getClasspathItems(root.uri);
-                return this.collectDecorators(tree, classpathItems, root.uri);
+                console.log("Got these classpath items from " + root);
+                console.log(classpathItems);
+                const rootDecorations = this.collectDecorators(tree, classpathItems, root.uri);
+                rootDecorations.forEach((decorator, path) => {
+                    toDecorate.set(path, decorator); 
+                });
             }
+            console.log(toDecorate);
+            return toDecorate;
         }
         return new Map();
     }
 
+    protected toDecorator(): TreeDecoration.Data {
+        const position = TreeDecoration.IconOverlayPosition.BOTTOM_LEFT;
+        const icon = 'fa fa-times-circle';
+        const color = 'var(--theia-brand-color1)';
+        return {
+            iconOverlay: {
+                position,
+                icon,
+                color
+            }
+        };
+    }
+    
     protected collectDecorators(tree: Tree, classpathItems: ClasspathEntry[], uri: string): Map<string, TreeDecoration.Data> {
         let toDecorate = new Map<string, TreeDecoration.Data>();
         for (const classpathItem of classpathItems) {
@@ -57,10 +79,7 @@ export class ClasspathDecorator implements TreeDecorator {
             const multiRootURI = JavaUtils.getMultiRootReadyURI(uri, classpathItem.path);
             let navigatorTreeNode = tree.getNode(multiRootURI);
             if (navigatorTreeNode) {
-                toDecorate.set(navigatorTreeNode.id, {
-                    backgroundColor: "blue",
-                    iconColor: "black"
-                });
+                toDecorate.set(navigatorTreeNode.id, this.toDecorator());
             }
         }
         return toDecorate;

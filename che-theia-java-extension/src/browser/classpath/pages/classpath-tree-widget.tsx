@@ -67,7 +67,7 @@ export abstract class AbstractClasspathTreeWidget extends TreeWidget {
     }
 
     protected renderIcon(node: TreeNode, props: NodeProps): React.ReactNode {
-        return <div className={node.icon + ClasspathTreeWidget.Styles.CLASSPATHTREEWIDGET_STYLE_ICONS}></div>;
+        return <div className={node.icon + " " + ClasspathTreeWidget.Styles.CLASSPATHTREEWIDGET_STYLE_ICONS}></div>;
     }
 
     protected renderTailDecorations(node: TreeNode, props: NodeProps): React.ReactNode {

@@ -16,10 +16,11 @@ import { Disposable } from "@theia/core";
 import { BuildPathTreeWidget } from "./build-path-widget";
 import { WorkspaceService } from "@theia/workspace/lib/browser";
 import { LibraryView } from "./pages/library/library-view";
+import { LibraryNodeID } from "./nodes/library-node";
 
 @injectable()
 export class DialogProps {
-    readonly title: string = "";
+    readonly title: string = "Configure Classpath";
 }
 
 export const ClasspathDialogRightPanelID = 'classpath-panel-right';
@@ -95,8 +96,8 @@ export abstract class ClassPathDialog extends AbstractDialog<void> {
         for (const classpathNode of this.buildPathTreeWidget.classpathNodes) {
             classpathNode.selected = false;
         }
-        const x = this.buildPathTreeWidget.model.getNode("Library node") as SelectableTreeNode;
-        x.selected = true;
+        const libNode = this.buildPathTreeWidget.model.getNode(LibraryNodeID) as SelectableTreeNode;
+        libNode.selected = true;
     }
 
     protected onUpdateRequest(msg: Message): void {
