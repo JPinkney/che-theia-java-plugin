@@ -55,7 +55,6 @@ export default new ContainerModule((bind) => {
     /**
      * Classpath configuration
      */
-
     bind(MarkDirAsSourceAction).toSelf().inSingletonScope();
     bind(CommandContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(MarkDirAsSourceAction));

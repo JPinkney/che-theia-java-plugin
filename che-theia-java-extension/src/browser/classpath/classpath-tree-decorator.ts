@@ -41,16 +41,12 @@ export class ClasspathDecorator implements TreeDecorator {
         if (roots) {
             const toDecorate = new Map<string, TreeDecoration.Data>();
             for (const root of roots) {
-                console.log("Attempting to get data from " + root);
-                const classpathItems = await this.classpathContainer.getClasspathItems(root.uri);
-                console.log("Got these classpath items from " + root);
-                console.log(classpathItems);
+                const classpathItems = await this.classpathContainer.getClassPathEntries(root.uri);
                 const rootDecorations = this.collectDecorators(tree, classpathItems, root.uri);
                 rootDecorations.forEach((decorator, path) => {
                     toDecorate.set(path, decorator); 
                 });
             }
-            console.log(toDecorate);
             return toDecorate;
         }
         return new Map();

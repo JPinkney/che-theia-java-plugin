@@ -78,7 +78,6 @@ export class BuildPathTreeWidget extends TreeWidget {
     }
 
     async createBuildPathTreeChildren(parent: Readonly<CompositeTreeNode>): Promise<IClasspathNode[]> {
-        console.log("Is this hit>");
         let activeFileStat = await this.getActiveClasspathFileStat();
         if (activeFileStat) {
             this.activeClasspathURI = activeFileStat.uri;  
