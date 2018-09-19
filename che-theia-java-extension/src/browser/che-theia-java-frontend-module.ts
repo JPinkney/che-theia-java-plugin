@@ -17,12 +17,15 @@ import {
 } from "@theia/core/lib/common";
 
 import { ContainerModule } from "inversify";
-import { KeybindingContribution, KeybindingContext } from '@theia/core/lib/browser';
+import { KeybindingContribution, KeybindingContext, bindViewContribution, WidgetFactory } from '@theia/core/lib/browser';
 
 import "../../src/browser/styles/icons.css";
 import { FileStructure } from './navigation/file-structure';
 import { FindImplementers } from './navigation/find-implementers';
 import { JavaEditorTextFocusContext } from './java-keybinding-contexts';
+import { UsagesContribution } from './usages/usages-frontend-contribution';
+import { UsagesWidget, USAGES_ID } from './usages/usages-tree-widget';
+import { createUsagesWidget } from './usages/usages-tree-container';
 
 export default new ContainerModule((bind) => {
 
@@ -41,5 +44,16 @@ export default new ContainerModule((bind) => {
     bind(MenuContribution).toDynamicValue(ctx => ctx.container.get(FindImplementers));
 
     bind(KeybindingContext).to(JavaEditorTextFocusContext).inSingletonScope();
+
+    bindViewContribution(bind, UsagesContribution);
+
+    bind(UsagesWidget).toDynamicValue(ctx => {
+        return createUsagesWidget(ctx.container)
+    });
+
+    bind(WidgetFactory).toDynamicValue(context => ({
+        id: USAGES_ID,
+        createWidget: () => context.container.get<UsagesWidget>(UsagesWidget)
+    }));
 
 });
