@@ -22,9 +22,9 @@ export class MatchNode implements CompositeTreeNode, ExpandableTreeNode {
         const packageNodeChildren: TreeNode[] = [];
         for (const child of children) {
             if (child.kind === SymbolKind.File && child.matches.length === 0) {
-                child.children.forEach(grandChild => packageNodeChildren.push(ElementNode.create(grandChild, undefined)));
+                child.children.forEach(grandChild => packageNodeChildren.push(ElementNode.create(grandChild, this)));
             } else {
-                packageNodeChildren.push(ElementNode.create(child, undefined));
+                packageNodeChildren.push(ElementNode.create(child, this));
             }
         }
         return packageNodeChildren;

@@ -10,8 +10,8 @@ export class ProjectNode implements CompositeTreeNode, ExpandableTreeNode {
     expanded: boolean;
     parent: Readonly<CompositeTreeNode> | undefined;
 
-    constructor(name: string, results: SearchResult[], parent: CompositeTreeNode | undefined) {
-        this.id = "project-node";
+    constructor(name: string, results: SearchResult[], parent: CompositeTreeNode) {
+        this.id = parent.id + "-" + name;
         this.name = name;
         this.children = this.getChildren(results);
         this.expanded = true;

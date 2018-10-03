@@ -10,9 +10,9 @@ export class PackageNode implements CompositeTreeNode, ExpandableTreeNode {
     expanded: boolean;
     parent: Readonly<CompositeTreeNode> | undefined;
 
-    constructor(pkg: SearchResult, parent: CompositeTreeNode | undefined) {
-        this.id = "project-node";
-        this.name = "blah blah";
+    constructor(pkg: SearchResult, parent: CompositeTreeNode) {
+        this.id = parent.id + pkg.name;
+        this.name = pkg.name;
         this.children = this.getChildren(pkg.children);
         this.expanded = true;
         this.parent = parent;
@@ -22,9 +22,9 @@ export class PackageNode implements CompositeTreeNode, ExpandableTreeNode {
         const packageNodeChildren: TreeNode[] = [];
         for (const child of children) {
             if (child.kind === SymbolKind.File && child.matches.length === 0) {
-                child.children.forEach(grandChild => packageNodeChildren.push(ElementNode.create(grandChild, undefined)));
+                child.children.forEach(grandChild => packageNodeChildren.push(ElementNode.create(grandChild, this)));
             } else {
-                packageNodeChildren.push(ElementNode.create(child, undefined));
+                packageNodeChildren.push(ElementNode.create(child, this));
             }
         }
         return packageNodeChildren;

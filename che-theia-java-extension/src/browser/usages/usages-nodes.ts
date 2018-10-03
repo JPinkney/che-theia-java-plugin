@@ -9,7 +9,7 @@
  *   Red Hat, Inc. - initial API and implementation
  */
 
-import { TreeNode, SelectableTreeNode, ExpandableTreeNode } from '@theia/core/lib/browser';
+import { TreeNode, SelectableTreeNode, ExpandableTreeNode, CompositeTreeNode } from '@theia/core/lib/browser';
 import { SymbolKind } from '@theia/languages/lib/browser';
 
 export interface UsagesResponse {
@@ -84,12 +84,12 @@ export namespace MatchNode {
 }
 
 export namespace ElementNode {
-    export function is(node: TreeNode | undefined): node is ElementNode {
+    export function is(node: TreeNode): node is ElementNode {
         return !!node && 'position' in node;
     }
 
-    export function create(result: SearchResult, parent: TreeNode | undefined): ElementNode {
-        const id = "test";
+    export function create(result: SearchResult, parent: Readonly<CompositeTreeNode>): ElementNode {
+        const id = parent.id + "-" + result.name;
         return <ElementNode>{
             id,
             name,
